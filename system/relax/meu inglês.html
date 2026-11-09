@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Vocabulary Master</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes bounce-short {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .animate-bounce-short { animation: bounce-short 0.3s ease-in-out; }
+    .animate-shake { animation: shake 0.4s ease-in-out; }
+    .icon { display: inline-flex; width: 1.25rem; height: 1.25rem; vertical-align: middle; }
+    .icon svg { width: 100%; height: 100%; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex flex-col font-sans">
+
+  <!-- Header / Barra Superior -->
+  <header class="bg-slate-800 border-b border-slate-700 px-3 py-2 z-10 shadow-md shrink-0">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-2 mr-1">
+        <span class="icon text-indigo-400" style="width:1.25rem;height:1.25rem" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+        </span>
+        <h1 class="text-base sm:text-lg font-bold tracking-wide whitespace-nowrap">English Vocab Master</h1>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <label for="filter-category" class="text-[11px] text-slate-400 font-semibold uppercase">Filtrar:</label>
+        <select id="filter-category" class="bg-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="all">Todas (350)</option>
+          <option value="expression">Expressões (50)</option>
+          <option value="phrase">Frases (50)</option>
+          <option value="verb">Verbos (50)</option>
+          <option value="number">Números (50)</option>
+          <option value="direction">Direções (50)</option>
+          <option value="adjective">Adjetivos (50)</option>
+          <option value="noun">Substantivos (50)</option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 ml-auto">
+        <button id="btn-export" class="bg-slate-700/80 hover:bg-slate-700 border border-slate-600 text-[11px] text-slate-200 py-1 px-2 rounded-lg transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Exportar progresso">
+          <span class="icon text-indigo-400" style="width:0.95rem;height:0.95rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="hidden sm:inline">Exportar</span>
+        </button>
+        <label class="bg-slate-700/80 hover:bg-slate-700 border border-slate-600 text-[11px] text-slate-200 py-1 px-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer focus-within:ring-2 focus-within:ring-emerald-500" title="Restaurar progresso">
+          <span class="icon text-emerald-400" style="width:0.95rem;height:0.95rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="hidden sm:inline">Restaurar</span>
+          <input type="file" id="import-file" accept=".json" class="hidden">
+        </label>
+        <button id="btn-sound" type="button" aria-pressed="true" title="Ativar/desativar som das respostas" class="bg-slate-700/80 hover:bg-slate-700 border border-slate-600 text-[11px] text-slate-200 py-1 px-2 rounded-lg transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <span id="btn-sound-icon" class="icon text-indigo-400" style="width:0.95rem;height:0.95rem" aria-hidden="true"></span>
+          <span id="btn-sound-label">Som</span>
+        </button>
+        <button id="btn-review" class="bg-slate-700/80 hover:bg-slate-700 border border-slate-600 text-[11px] text-amber-300 py-1 px-2 rounded-lg transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500" title="Revisar erros">
+          <span class="icon" style="width:0.95rem;height:0.95rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="hidden sm:inline">Erros</span> (<span id="wrong-count-badge">0</span>)
+        </button>
+        <button id="btn-reset" class="bg-slate-700/80 hover:bg-rose-900/60 border border-slate-600 hover:border-rose-700/60 text-[11px] text-rose-300 py-1 px-2 rounded-lg transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500" title="Resetar números">
+          <span class="icon" style="width:0.95rem;height:0.95rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span><span class="hidden sm:inline">Resetar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Painel Principal / Jogo -->
+  <main class="max-w-3xl w-full mx-auto px-3 py-2 flex-1 min-h-0 flex flex-col justify-center gap-2">
+
+    <!-- Painel de Estatísticas -->
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2 shrink-0" aria-live="polite" aria-atomic="false">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Acertos</span>
+        <span id="score-correct" class="text-lg sm:text-xl font-bold text-emerald-400 leading-tight">0</span>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Erros</span>
+        <span id="score-wrong" class="text-lg sm:text-xl font-bold text-rose-400 leading-tight">0</span>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Não sei</span>
+        <span id="score-dontknow" class="text-lg sm:text-xl font-bold text-sky-400 leading-tight">0</span>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Precisão</span>
+        <span id="score-accuracy" class="text-lg sm:text-xl font-bold text-indigo-400 leading-tight">0%</span>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Combo</span>
+        <span id="score-streak" class="text-lg sm:text-xl font-bold text-amber-400 leading-tight">0 🔥</span>
+      </div>
+      <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1.5 text-center shadow">
+        <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block leading-tight">Vistas</span>
+        <span id="score-seen" class="text-lg sm:text-xl font-bold text-slate-200 leading-tight">0</span>
+      </div>
+    </div>
+
+    <!-- Card Principal de Questão -->
+    <div id="game-card" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 shadow-xl relative overflow-hidden transition-all min-h-0">
+
+      <!-- Header do Card: Tag da Categoria + Ouvir Pronúncia -->
+      <div class="flex justify-between items-center mb-2">
+        <span id="word-badge" class="bg-indigo-900/60 text-indigo-300 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-indigo-700/50">
+          Carregando...
+        </span>
+        <button id="btn-speak" title="Ouvir Pronúncia (S)" aria-label="Ouvir pronúncia" class="text-slate-400 hover:text-indigo-400 p-1.5 rounded-full hover:bg-slate-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <span class="icon" style="width:1.1rem;height:1.1rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span>
+        </button>
+      </div>
+
+      <!-- Palavra/Frase em Inglês -->
+      <div class="text-center my-1.5 sm:my-2">
+        <h2 id="word-display" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-50 tracking-wide leading-tight">
+          ---
+        </h2>
+        <p id="word-ipa" class="text-xs sm:text-sm font-mono text-slate-400 italic mt-0.5">/---/</p>
+      </div>
+
+      <p id="mode-hint" class="hidden text-center text-[11px] text-amber-300 mb-1">Modo: praticando apenas erros</p>
+
+      <!-- Opções de Escolha (3 botões) -->
+      <div id="options-container" class="grid grid-cols-1 gap-1.5 sm:gap-2 my-2" role="group" aria-label="Opções de resposta">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+
+      <!-- Feedback e Próxima Questão -->
+      <div id="feedback-container" class="hidden text-center mt-2 pt-2 border-t border-slate-700/60" aria-live="polite">
+        <p id="feedback-text" class="text-sm sm:text-base font-semibold mb-1.5"></p>
+        <button id="btn-next" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1.5 px-4 rounded-lg transition shadow-lg inline-flex items-center gap-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <span>Próxima</span>
+          <span class="icon" style="width:0.85rem;height:0.85rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </button>
+        <p class="text-[10px] text-slate-500 mt-1">1–4 escolher • Enter próxima • S ouvir • Esc revisão</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Rodapé com Isenção de Responsabilidade -->
+  <footer class="bg-slate-950 border-t border-slate-800 py-1 px-3 text-center text-[10px] sm:text-[11px] text-slate-500 shrink-0">
+    Elaborado por IA usando criatividade humana, pode conter erros.
+  </footer>
+
+  <!-- Modal de Revisão de Erros -->
+  <div id="review-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="review-title">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col max-h-[80vh]">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+        <h3 id="review-title" class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <span class="icon text-amber-400" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span> Lista de Palavras para Revisão
+        </h3>
+        <button id="btn-close-review" class="text-slate-400 hover:text-slate-100 p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded" aria-label="Fechar revisão">
+          <span class="icon" style="width:1.35rem;height:1.35rem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+        </button>
+      </div>
+      <div class="flex gap-2 mb-3 flex-wrap">
+        <button id="btn-practice-errors" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-amber-400">Praticar só erros</button>
+        <button id="btn-practice-all" class="bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold py-2 px-3 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-400">Voltar ao modo normal</button>
+      </div>
+      <div id="review-list" class="overflow-y-auto space-y-2 pr-2 flex-1">
+        <!-- Itens inseridos via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ICONS = {
+      circle: '<span class="icon text-slate-500" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></span>',
+      check: '<span class="icon text-emerald-400 text-lg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg></span>',
+      xmark: '<span class="icon text-rose-400 text-lg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></span>'
+    };
+
+    const VOCAB_FALLBACK = [{"english": "Welcome", "portuguese": "Bem-vindo", "category": "Expressão", "type": "expression", "ipa": "/ˈwel.kəm/"}, {"english": "Good morning", "portuguese": "Bom dia", "category": "Expressão", "type": "expression", "ipa": "/ɡʊd ˈmɔː.nɪŋ/"}, {"english": "Good afternoon", "portuguese": "Boa tarde", "category": "Expressão", "type": "expression", "ipa": "/ɡʊd ˌɑːf.təˈnuːn/"}, {"english": "Good evening", "portuguese": "Boa noite (chegada)", "category": "Expressão", "type": "expression", "ipa": "/ɡʊd ˈiːv.nɪŋ/"}, {"english": "Good night", "portuguese": "Boa noite (despedida)", "category": "Expressão", "type": "expression", "ipa": "/ɡʊd naɪt/"}, {"english": "Thank you", "portuguese": "Obrigado(a)", "category": "Expressão", "type": "expression", "ipa": "/θæŋk juː/"}, {"english": "You're welcome", "portuguese": "De nada", "category": "Expressão", "type": "expression", "ipa": "/jʊər ˈwel.kəm/"}, {"english": "Excuse me", "portuguese": "Com licença / Desculpe", "category": "Expressão", "type": "expression", "ipa": "/ɪkˈskjuːz miː/"}, {"english": "I'm sorry", "portuguese": "Me desculpe", "category": "Expressão", "type": "expression", "ipa": "/aɪm ˈsɒr.i/"}, {"english": "See you later", "portuguese": "Até logo", "category": "Expressão", "type": "expression", "ipa": "/siː juː ˈleɪ.tər/"}, {"english": "See you tomorrow", "portuguese": "Até amanhã", "category": "Expressão", "type": "expression", "ipa": "/siː juː təˈmɒr.əʊ/"}, {"english": "Have a nice day", "portuguese": "Tenha um bom dia", "category": "Expressão", "type": "expression", "ipa": "/hæv ə naɪs deɪ/"}, {"english": "Never mind", "portuguese": "Deixa para lá / Não importa", "category": "Expressão", "type": "expression", "ipa": "/ˈnev.ər maɪnd/"}, {"english": "Of course", "portuguese": "Com certeza / Claro", "category": "Expressão", "type": "expression", "ipa": "/əv kɔːs/"}, {"english": "Help me", "portuguese": "Ajude-me", "category": "Expressão", "type": "expression", "ipa": "/help miː/"}, {"english": "Congratulations", "portuguese": "Parabéns", "category": "Expressão", "type": "expression", "ipa": "/kənˌɡrætʃ.əˈleɪ.ʃənz/"}, {"english": "Happy Birthday", "portuguese": "Feliz Aniversário", "category": "Expressão", "type": "expression", "ipa": "/ˈhæp.i ˈbɜːθ.deɪ/"}, {"english": "Take care", "portuguese": "Se cuide", "category": "Expressão", "type": "expression", "ipa": "/teɪk keər/"}, {"english": "Long time no see", "portuguese": "Quanto tempo não nos vemos", "category": "Expressão", "type": "expression", "ipa": "/lɒŋ taɪm nəʊ siː/"}, {"english": "What's up?", "portuguese": "E aí? / O que está rolando?", "category": "Expressão", "type": "expression", "ipa": "/wɒts ʌp/"}, {"english": "Nice to meet you", "portuguese": "Prazer em conhecê-lo(a)", "category": "Expressão", "type": "expression", "ipa": "/naɪs tuː miːt juː/"}, {"english": "Pardon me", "portuguese": "Perdão", "category": "Expressão", "type": "expression", "ipa": "/ˈpɑː.dən miː/"}, {"english": "Best wishes", "portuguese": "Muitos felicidades / Melhores desejos", "category": "Expressão", "type": "expression", "ipa": "/best ˈwɪʃ.ɪz/"}, {"english": "Good luck", "portuguese": "Boa sorte", "category": "Expressão", "type": "expression", "ipa": "/ɡʊd lʌk/"}, {"english": "Bon voyage", "portuguese": "Boa viagem", "category": "Expressão", "type": "expression", "ipa": "/bɒn vwɑɪˈɑːʒ/"}, {"english": "Cheers!", "portuguese": "Saúde! / Um brinde!", "category": "Expressão", "type": "expression", "ipa": "/tʃɪəz/"}, {"english": "No problem", "portuguese": "Sem problemas", "category": "Expressão", "type": "expression", "ipa": "/nəʊ ˈprɒb.ləm/"}, {"english": "Don't worry", "portuguese": "Não se preocupe", "category": "Expressão", "type": "expression", "ipa": "/dəʊnt ˈwʌr.i/"}, {"english": "By the way", "portuguese": "Por falar nisso / A propósito", "category": "Expressão", "type": "expression", "ipa": "/baɪ ðə weɪ/"}, {"english": "As soon as possible", "portuguese": "O mais rápido possível", "category": "Expressão", "type": "expression", "ipa": "/æz suːn æz ˈpɒs.ə.bəl/"}, {"english": "Make yourself at home", "portuguese": "Sinta-se em casa", "category": "Expressão", "type": "expression", "ipa": "/meɪk jɔːˈself æt həʊm/"}, {"english": "It's up to you", "portuguese": "Você quem sabe / Depende de você", "category": "Expressão", "type": "expression", "ipa": "/ɪts ʌp tuː juː/"}, {"english": "I have no idea", "portuguese": "Não faço a menor ideia", "category": "Expressão", "type": "expression", "ipa": "/aɪ hæv nəʊ aɪˈdɪə/"}, {"english": "Cross your fingers", "portuguese": "Torça por mim / Dedos cruzados", "category": "Expressão", "type": "expression", "ipa": "/krɒs jɔː ˈfɪŋ.ɡəz/"}, {"english": "So far so good", "portuguese": "Até agora tudo bem", "category": "Expressão", "type": "expression", "ipa": "/səʊ fɑːr səʊ ɡʊd/"}, {"english": "Speak of the devil", "portuguese": "Falando no falecido / Na bruxa", "category": "Expressão", "type": "expression", "ipa": "/spiːk əv ðə ˈdev.əl/"}, {"english": "Piece of cake", "portuguese": "Mamão com açúcar / Muito fácil", "category": "Expressão", "type": "expression", "ipa": "/piːs əv keɪk/"}, {"english": "Break a leg", "portuguese": "Boa sorte (no teatro/apresentação)", "category": "Expressão", "type": "expression", "ipa": "/breɪk ə leɡ/"}, {"english": "Call it a day", "portuguese": "Chega por hoje / Encerrar o dia", "category": "Expressão", "type": "expression", "ipa": "/kɔːl ɪt ə deɪ/"}, {"english": "Better late than never", "portuguese": "Antes tarde do que nunca", "category": "Expressão", "type": "expression", "ipa": "/ˈbet.ər leɪt ðæn ˈnev.ər/"}, {"english": "Under the weather", "portuguese": "Meio doentio / indisposto", "category": "Expressão", "type": "expression", "ipa": "/ˈʌn.dər ðə ˈweð.ər/"}, {"english": "Once in a blue moon", "portuguese": "Raramente / Uma vez na vida", "category": "Expressão", "type": "expression", "ipa": "/wʌns ɪn ə bluː muːn/"}, {"english": "To make matters worse", "portuguese": "Para piorar as coisas", "category": "Expressão", "type": "expression", "ipa": "/tuː meɪk ˈmæt.əz wɜːs/"}, {"english": "Keep in touch", "portuguese": "Mantenha contato", "category": "Expressão", "type": "expression", "ipa": "/kiːp ɪn tʌtʃ/"}, {"english": "Hold on", "portuguese": "Espere um pouco / Agarre-se", "category": "Expressão", "type": "expression", "ipa": "/həʊld ɒn/"}, {"english": "Count me in", "portuguese": "Pode contar comigo", "category": "Expressão", "type": "expression", "ipa": "/kaʊnt miː ɪn/"}, {"english": "Count me out", "portuguese": "Estou fora", "category": "Expressão", "type": "expression", "ipa": "/kaʊnt miː aʊt/"}, {"english": "All of a sudden", "portuguese": "De repente", "category": "Expressão", "type": "expression", "ipa": "/ɔːl əv ə ˈsʌd.ən/"}, {"english": "Touch wood / Knock on wood", "portuguese": "Bata na madeira", "category": "Expressão", "type": "expression", "ipa": "/nɒk ɒn wʊd/"}, {"english": "Safe and sound", "portuguese": "Sãos e salvos", "category": "Expressão", "type": "expression", "ipa": "/seɪf ænd saʊnd/"}, {"english": "How are you?", "portuguese": "Como você está?", "category": "Frase", "type": "phrase", "ipa": "/haʊ ɑːr juː/"}, {"english": "What is your name?", "portuguese": "Qual é o seu nome?", "category": "Frase", "type": "phrase", "ipa": "/wɒt ɪz jɔː neɪm/"}, {"english": "Where are you from?", "portuguese": "De onde você é?", "category": "Frase", "type": "phrase", "ipa": "/weər ɑːr juː frɒm/"}, {"english": "Nice to meet you", "portuguese": "Prazer em conhecê-lo", "category": "Frase", "type": "phrase", "ipa": "/naɪs tuː miːt juː/"}, {"english": "I don't understand", "portuguese": "Eu não entendo", "category": "Frase", "type": "phrase", "ipa": "/aɪ dəʊnt ˌʌn.dəˈstænd/"}, {"english": "Can you help me?", "portuguese": "Você pode me ajudar?", "category": "Frase", "type": "phrase", "ipa": "/kæn juː help miː/"}, {"english": "How much is this?", "portuguese": "Quanto custa isto?", "category": "Frase", "type": "phrase", "ipa": "/haʊ mʌtʃ ɪz ðɪs/"}, {"english": "Where is the bathroom?", "portuguese": "Onde fica o banheiro?", "category": "Frase", "type": "phrase", "ipa": "/weər ɪz ðə ˈbɑːθ.ruːm/"}, {"english": "What time is it?", "portuguese": "Que horas são?", "category": "Frase", "type": "phrase", "ipa": "/wɒt taɪm ɪz ɪt/"}, {"english": "I need a doctor", "portuguese": "Eu preciso de um médico", "category": "Frase", "type": "phrase", "ipa": "/aɪ niːd ə ˈdɒk.tər/"}, {"english": "Speak more slowly", "portuguese": "Fale mais devagar", "category": "Frase", "type": "phrase", "ipa": "/spiːk mɔː ˈsləʊ.li/"}, {"english": "I love learning English", "portuguese": "Eu amo aprender inglês", "category": "Frase", "type": "phrase", "ipa": "/aɪ lʌv ˈlɜː.nɪŋ ˈɪŋ.ɡlɪʃ/"}, {"english": "What do you do?", "portuguese": "O que você faz da vida?", "category": "Frase", "type": "phrase", "ipa": "/wɒt duː juː duː/"}, {"english": "I agree with you", "portuguese": "Eu concordo com você", "category": "Frase", "type": "phrase", "ipa": "/aɪ əˈɡriː wɪð juː/"}, {"english": "See you next week", "portuguese": "Vejo você na próxima semana", "category": "Frase", "type": "phrase", "ipa": "/siː juː nekst wiːk/"}, {"english": "Where do you live?", "portuguese": "Onde você mora?", "category": "Frase", "type": "phrase", "ipa": "/weər duː juː lɪv/"}, {"english": "How old are you?", "portuguese": "Quantos anos você tem?", "category": "Frase", "type": "phrase", "ipa": "/haʊ əʊld ɑːr juː/"}, {"english": "What is happening here?", "portuguese": "O que está acontecendo aqui?", "category": "Frase", "type": "phrase", "ipa": "/wɒt ɪz ˈhæp.ən.ɪŋ hɪər/"}, {"english": "I am looking for a restaurant", "portuguese": "Estou procurando um restaurante", "category": "Frase", "type": "phrase", "ipa": "/aɪ æm ˈlʊk.ɪŋ fɔːr ə ˈres.trɒnt/"}, {"english": "Could you repeat that?", "portuguese": "Você poderia repetir isso?", "category": "Frase", "type": "phrase", "ipa": "/kʊd juː rɪˈpiːt ðæt/"}, {"english": "I don't know yet", "portuguese": "Eu ainda não sei", "category": "Frase", "type": "phrase", "ipa": "/aɪ dəʊnt nəʊ jet/"}, {"english": "What do you think about this?", "portuguese": "O que você acha disso?", "category": "Frase", "type": "phrase", "ipa": "/wɒt duː juː θɪŋk əˈbaʊt ðɪs/"}, {"english": "I'm on my way", "portuguese": "Estou a caminho", "category": "Frase", "type": "phrase", "ipa": "/aɪm ɒn maɪ weɪ/"}, {"english": "That sounds great", "portuguese": "Isso parece ótimo", "category": "Frase", "type": "phrase", "ipa": "/ðæt saʊndz ɡreɪt/"}, {"english": "It is raining outside", "portuguese": "Está chovendo lá fora", "category": "Frase", "type": "phrase", "ipa": "/ɪt ɪz ˈreɪn.ɪŋ ˌaʊtˈsaɪd/"}, {"english": "I would like a cup of coffee", "portuguese": "Eu gostaria de uma xícara de café", "category": "Frase", "type": "phrase", "ipa": "/aɪ wʊd laɪk ə kʌp əv ˈkɒf.i/"}, {"english": "Can I pay by credit card?", "portuguese": "Posso pagar com cartão de crédito?", "category": "Frase", "type": "phrase", "ipa": "/kæn aɪ peɪ baɪ ˈkred.ɪt kɑːd/"}, {"english": "Where can I buy a ticket?", "portuguese": "Onde posso comprar uma passagem?", "category": "Frase", "type": "phrase", "ipa": "/weər kæn aɪ baɪ ə ˈtɪk.ɪt/"}, {"english": "Everything is going to be fine", "portuguese": "Tudo vai ficar bem", "category": "Frase", "type": "phrase", "ipa": "/ˈev.ri.θɪŋ ɪz ˈɡəʊ.ɪŋ tuː biː faɪn/"}, {"english": "I am feeling very tired today", "portuguese": "Estou me sentindo muito cansado hoje", "category": "Frase", "type": "phrase", "ipa": "/aɪ æm ˈfiː.lɪŋ ˈver.i taɪəd təˈdeɪ/"}, {"english": "Don't forget to call me", "portuguese": "Não se esqueça de me ligar", "category": "Frase", "type": "phrase", "ipa": "/dəʊnt fəˈɡet tuː kɔːl miː/"}, {"english": "What is your phone number?", "portuguese": "Qual é o seu número de telefone?", "category": "Frase", "type": "phrase", "ipa": "/wɒt ɪz jɔː fəʊn ˈnʌm.bər/"}, {"english": "It takes twenty minutes", "portuguese": "Leva vinte minutos", "category": "Frase", "type": "phrase", "ipa": "/ɪt teɪks ˈtwen.ti ˈmɪn.ɪts/"}, {"english": "I lost my passport", "portuguese": "Eu perdi meu passaporte", "category": "Frase", "type": "phrase", "ipa": "/aɪ lɒst maɪ ˈpɑːs.pɔːt/"}, {"english": "Can you show me on the map?", "portuguese": "Você pode me mostrar no mapa?", "category": "Frase", "type": "phrase", "ipa": "/kæn juː ʃəʊ miː ɒn ðə mæp/"}, {"english": "I will be right back", "portuguese": "Eu volto já", "category": "Frase", "type": "phrase", "ipa": "/aɪ wɪl biː raɪt bæk/"}, {"english": "That is a very good question", "portuguese": "Essa é uma pergunta muito boa", "category": "Frase", "type": "phrase", "ipa": "/ðæt ɪz ə ˈver.i ɡʊd ˈkwes.tʃən/"}, {"english": "Please write it down for me", "portuguese": "Por favor escreva isso para mim", "category": "Frase", "type": "phrase", "ipa": "/pliːz raɪt ɪt daʊn fɔːr miː/"}, {"english": "I am learning a lot", "portuguese": "Estou aprendendo muito", "category": "Frase", "type": "phrase", "ipa": "/aɪ æm ˈlɜː.nɪŋ ə lɒt/"}, {"english": "Is there Wi-Fi available here?", "portuguese": "Tem Wi-Fi disponível aqui?", "category": "Frase", "type": "phrase", "ipa": "/ɪz ðeər ˈwaɪ.faɪ əˈveɪ.lə.bəl hɪər/"}, {"english": "I hope to see you soon", "portuguese": "Espero te ver em breve", "category": "Frase", "type": "phrase", "ipa": "/aɪ həʊp tuː siː juː suːn/"}, {"english": "What kind of music do you like?", "portuguese": "Que tipo de música você gosta?", "category": "Frase", "type": "phrase", "ipa": "/wɒt kaɪnd əv ˈmjuː.zɪk duː juː laɪk/"}, {"english": "Let's go for a walk", "portuguese": "Vamos dar um passeio", "category": "Frase", "type": "phrase", "ipa": "/lets ɡəʊ fɔːr ə wɔːk/"}, {"english": "I am looking forward to it", "portuguese": "Estou ansioso por isso", "category": "Frase", "type": "phrase", "ipa": "/aɪ æm ˈlʊk.ɪŋ ˈfɔː.wəd tuː ɪt/"}, {"english": "Never stop trying", "portuguese": "Nunca pare de tentar", "category": "Frase", "type": "phrase", "ipa": "/ˈnev.ər stɒp ˈtraɪ.ɪŋ/"}, {"english": "What is the reason for this?", "portuguese": "Qual é o motivo disso?", "category": "Frase", "type": "phrase", "ipa": "/wɒt ɪz ðə ˈriː.zən fɔːr ðɪs/"}, {"english": "I missed the bus", "portuguese": "Eu perdi o ônibus", "category": "Frase", "type": "phrase", "ipa": "/aɪ mɪst ðə bʌs/"}, {"english": "The food is delicious", "portuguese": "A comida está deliciosa", "category": "Frase", "type": "phrase", "ipa": "/ðə fuːd ɪz dɪˈlɪʃ.əs/"}, {"english": "Can we have the bill, please?", "portuguese": "Pode nos trazer a conta, por favor?", "category": "Frase", "type": "phrase", "ipa": "/kæn wiː hæv ðə bɪl pliːz/"}, {"english": "I'm proud of you", "portuguese": "Estou orgulhoso de você", "category": "Frase", "type": "phrase", "ipa": "/aɪm praʊd əv juː/"}, {"english": "To be", "portuguese": "Ser / Estar", "category": "Verbo", "type": "verb", "ipa": "/tuː biː/"}, {"english": "To have", "portuguese": "Ter / Possuir", "category": "Verbo", "type": "verb", "ipa": "/tuː hæv/"}, {"english": "To do", "portuguese": "Fazer", "category": "Verbo", "type": "verb", "ipa": "/tuː duː/"}, {"english": "To make", "portuguese": "Criar / Fabricar", "category": "Verbo", "type": "verb", "ipa": "/tuː meɪk/"}, {"english": "To go", "portuguese": "Ir", "category": "Verbo", "type": "verb", "ipa": "/tuː ɡəʊ/"}, {"english": "To speak", "portuguese": "Falar", "category": "Verbo", "type": "verb", "ipa": "/tuː spiːk/"}, {"english": "To learn", "portuguese": "Aprender", "category": "Verbo", "type": "verb", "ipa": "/tuː lɜːn/"}, {"english": "To work", "portuguese": "Trabalhar", "category": "Verbo", "type": "verb", "ipa": "/tuː wɜːk/"}, {"english": "To play", "portuguese": "Jogar / Tocar / Brincar", "category": "Verbo", "type": "verb", "ipa": "/tuː pleɪ/"}, {"english": "To eat", "portuguese": "Comer", "category": "Verbo", "type": "verb", "ipa": "/tuː iːt/"}, {"english": "To drink", "portuguese": "Beber", "category": "Verbo", "type": "verb", "ipa": "/tuː drɪŋk/"}, {"english": "To sleep", "portuguese": "Dormir", "category": "Verbo", "type": "verb", "ipa": "/tuː sliːp/"}, {"english": "To read", "portuguese": "Ler", "category": "Verbo", "type": "verb", "ipa": "/tuː riːd/"}, {"english": "To write", "portuguese": "Escrever", "category": "Verbo", "type": "verb", "ipa": "/tuː raɪt/"}, {"english": "To see", "portuguese": "Ver", "category": "Verbo", "type": "verb", "ipa": "/tuː siː/"}, {"english": "To hear", "portuguese": "Ouvir", "category": "Verbo", "type": "verb", "ipa": "/tuː hɪər/"}, {"english": "To buy", "portuguese": "Comprar", "category": "Verbo", "type": "verb", "ipa": "/tuː baɪ/"}, {"english": "To sell", "portuguese": "Vender", "category": "Verbo", "type": "verb", "ipa": "/tuː sel/"}, {"english": "To think", "portuguese": "Pensar / Achar", "category": "Verbo", "type": "verb", "ipa": "/tuː θɪŋk/"}, {"english": "To know", "portuguese": "Saber / Conhecer", "category": "Verbo", "type": "verb", "ipa": "/tuː nəʊ/"}, {"english": "To want", "portuguese": "Querer", "category": "Verbo", "type": "verb", "ipa": "/tuː wɒnt/"}, {"english": "To need", "portuguese": "Precisar", "category": "Verbo", "type": "verb", "ipa": "/tuː niːd/"}, {"english": "To understand", "portuguese": "Entender / Compreender", "category": "Verbo", "type": "verb", "ipa": "/tuː ˌʌn.dəˈstænd/"}, {"english": "To remember", "portuguese": "Lembrar-se", "category": "Verbo", "type": "verb", "ipa": "/tuː rɪˈmem.bər/"}, {"english": "To forget", "portuguese": "Esquecer", "category": "Verbo", "type": "verb", "ipa": "/tuː fəˈɡet/"}, {"english": "To open", "portuguese": "Abrir", "category": "Verbo", "type": "verb", "ipa": "/tuː ˈəʊ.pən/"}, {"english": "To close", "portuguese": "Fechar", "category": "Verbo", "type": "verb", "ipa": "/tuː kləʊz/"}, {"english": "To start", "portuguese": "Começar / Iniciar", "category": "Verbo", "type": "verb", "ipa": "/tuː stɑːt/"}, {"english": "To finish", "portuguese": "Terminar / Finalizar", "category": "Verbo", "type": "verb", "ipa": "/tuː ˈfɪn.ɪʃ/"}, {"english": "To travel", "portuguese": "Viajar", "category": "Verbo", "type": "verb", "ipa": "/tuː ˈtræv.əl/"}, {"english": "To drive", "portuguese": "Dirigir", "category": "Verbo", "type": "verb", "ipa": "/tuː draɪv/"}, {"english": "To fly", "portuguese": "Voar", "category": "Verbo", "type": "verb", "ipa": "/tuː flaɪ/"}, {"english": "To walk", "portuguese": "Caminhar / Andar", "category": "Verbo", "type": "verb", "ipa": "/tuː wɔːk/"}, {"english": "To run", "portuguese": "Correr", "category": "Verbo", "type": "verb", "ipa": "/tuː rʌn/"}, {"english": "To call", "portuguese": "Chamar / Ligar", "category": "Verbo", "type": "verb", "ipa": "/tuː kɔːl/"}, {"english": "To listen", "portuguese": "Escutar / Ouvir com atenção", "category": "Verbo", "type": "verb", "ipa": "/tuː ˈlɪs.ən/"}, {"english": "To watch", "portuguese": "Assistir / Observar", "category": "Verbo", "type": "verb", "ipa": "/tuː wɒtʃ/"}, {"english": "To give", "portuguese": "Dar / Entregar", "category": "Verbo", "type": "verb", "ipa": "/tuː ɡɪv/"}, {"english": "To take", "portuguese": "Pegar / Levar", "category": "Verbo", "type": "verb", "ipa": "/tuː teɪk/"}, {"english": "To bring", "portuguese": "Trazer", "category": "Verbo", "type": "verb", "ipa": "/tuː brɪŋ/"}, {"english": "To feel", "portuguese": "Sentir", "category": "Verbo", "type": "verb", "ipa": "/tuː fiːl/"}, {"english": "To try", "portuguese": "Tentar / Experimentar", "category": "Verbo", "type": "verb", "ipa": "/tuː traɪ/"}, {"english": "To use", "portuguese": "Usar / Utilizar", "category": "Verbo", "type": "verb", "ipa": "/tuː juːz/"}, {"english": "To find", "portuguese": "Encontrar / Achar", "category": "Verbo", "type": "verb", "ipa": "/tuː faɪnd/"}, {"english": "To tell", "portuguese": "Contar / Dizer", "category": "Verbo", "type": "verb", "ipa": "/tuː tel/"}, {"english": "To ask", "portuguese": "Perguntar / Pedir", "category": "Verbo", "type": "verb", "ipa": "/tuː ɑːsk/"}, {"english": "To answer", "portuguese": "Responder", "category": "Verbo", "type": "verb", "ipa": "/tuː ˈɑːn.sər/"}, {"english": "To help", "portuguese": "Ajudar", "category": "Verbo", "type": "verb", "ipa": "/tuː help/"}, {"english": "To choose", "portuguese": "Escolher", "category": "Verbo", "type": "verb", "ipa": "/tuː tʃuːz/"}, {"english": "To change", "portuguese": "Mudar / Alterar", "category": "Verbo", "type": "verb", "ipa": "/tuː tʃeɪndʒ/"}, {"english": "One", "portuguese": "Um", "category": "Número", "type": "number", "ipa": "/wʌn/"}, {"english": "Two", "portuguese": "Dois", "category": "Número", "type": "number", "ipa": "/tuː/"}, {"english": "Three", "portuguese": "Três", "category": "Número", "type": "number", "ipa": "/θriː/"}, {"english": "Four", "portuguese": "Quatro", "category": "Número", "type": "number", "ipa": "/fɔːr/"}, {"english": "Five", "portuguese": "Cinco", "category": "Número", "type": "number", "ipa": "/faɪv/"}, {"english": "Six", "portuguese": "Seis", "category": "Número", "type": "number", "ipa": "/sɪks/"}, {"english": "Seven", "portuguese": "Sete", "category": "Número", "type": "number", "ipa": "/ˈsev.ən/"}, {"english": "Eight", "portuguese": "Oito", "category": "Número", "type": "number", "ipa": "/eɪt/"}, {"english": "Nine", "portuguese": "Nove", "category": "Número", "type": "number", "ipa": "/naɪn/"}, {"english": "Ten", "portuguese": "Dez", "category": "Número", "type": "number", "ipa": "/ten/"}, {"english": "Eleven", "portuguese": "Onze", "category": "Número", "type": "number", "ipa": "/ɪˈlev.ən/"}, {"english": "Twelve", "portuguese": "Doze", "category": "Número", "type": "number", "ipa": "/twelv/"}, {"english": "Thirteen", "portuguese": "Treze", "category": "Número", "type": "number", "ipa": "/ˌθɜːˈtiːn/"}, {"english": "Fourteen", "portuguese": "Catorze", "category": "Número", "type": "number", "ipa": "/ˌfɔːˈtiːn/"}, {"english": "Fifteen", "portuguese": "Quinze", "category": "Número", "type": "number", "ipa": "/ˌfɪfˈtiːn/"}, {"english": "Sixteen", "portuguese": "Dezesseis", "category": "Número", "type": "number", "ipa": "/ˌsɪksˈtiːn/"}, {"english": "Seventeen", "portuguese": "Dezessete", "category": "Número", "type": "number", "ipa": "/ˌsev.ənˈtiːn/"}, {"english": "Eighteen", "portuguese": "Dezoito", "category": "Número", "type": "number", "ipa": "/ˌeɪˈtiːn/"}, {"english": "Nineteen", "portuguese": "Dezenove", "category": "Número", "type": "number", "ipa": "/ˌnaɪnˈtiːn/"}, {"english": "Twenty", "portuguese": "Vinte", "category": "Número", "type": "number", "ipa": "/ˈtwen.ti/"}, {"english": "Thirty", "portuguese": "Trinta", "category": "Número", "type": "number", "ipa": "/ˈθɜː.ti/"}, {"english": "Forty", "portuguese": "Quarenta", "category": "Número", "type": "number", "ipa": "/ˈfɔː.ti/"}, {"english": "Fifty", "portuguese": "Cinquenta", "category": "Número", "type": "number", "ipa": "/ˈfɪf.ti/"}, {"english": "Sixty", "portuguese": "Sessenta", "category": "Número", "type": "number", "ipa": "/ˈsɪks.ti/"}, {"english": "Seventy", "portuguese": "Setenta", "category": "Número", "type": "number", "ipa": "/ˈsev.ən.ti/"}, {"english": "Eighty", "portuguese": "Oitenta", "category": "Número", "type": "number", "ipa": "/ˈeɪ.ti/"}, {"english": "Ninety", "portuguese": "Noventa", "category": "Número", "type": "number", "ipa": "/ˈnaɪn.ti/"}, {"english": "Hundred", "portuguese": "Cem", "category": "Número", "type": "number", "ipa": "/ˈhʌn.drəd/"}, {"english": "Two hundred", "portuguese": "Duzentos", "category": "Número", "type": "number", "ipa": "/tuː ˈhʌn.drəd/"}, {"english": "Five hundred", "portuguese": "Quinhentos", "category": "Número", "type": "number", "ipa": "/faɪv ˈhʌn.drəd/"}, {"english": "Thousand", "portuguese": "Mil", "category": "Número", "type": "number", "ipa": "/ˈθaʊ.zənd/"}, {"english": "Ten thousand", "portuguese": "Dez mil", "category": "Número", "type": "number", "ipa": "/ten ˈθaʊ.zənd/"}, {"english": "Million", "portuguese": "Milhão", "category": "Número", "type": "number", "ipa": "/ˈmɪl.jən/"}, {"english": "Billion", "portuguese": "Bilhão", "category": "Número", "type": "number", "ipa": "/ˈbɪl.jən/"}, {"english": "First", "portuguese": "Primeiro(a)", "category": "Número", "type": "number", "ipa": "/fɜːst/"}, {"english": "Second", "portuguese": "Segundo(a)", "category": "Número", "type": "number", "ipa": "/ˈsek.ənd/"}, {"english": "Third", "portuguese": "Terceiro(a)", "category": "Número", "type": "number", "ipa": "/θɜːd/"}, {"english": "Fourth", "portuguese": "Quarto(a)", "category": "Número", "type": "number", "ipa": "/fɔːθ/"}, {"english": "Fifth", "portuguese": "Quinto(a)", "category": "Número", "type": "number", "ipa": "/fɪfθ/"}, {"english": "Tenth", "portuguese": "Décimo(a)", "category": "Número", "type": "number", "ipa": "/tenθ/"}, {"english": "Half", "portuguese": "Metade / Meio", "category": "Número", "type": "number", "ipa": "/hɑːf/"}, {"english": "Quarter", "portuguese": "Um quarto (1/4)", "category": "Número", "type": "number", "ipa": "/ˈkwɔː.tər/"}, {"english": "Double", "portuguese": "Dobro / Duplo", "category": "Número", "type": "number", "ipa": "/ˈdʌb.əl/"}, {"english": "Triple", "portuguese": "Triplo", "category": "Número", "type": "number", "ipa": "/ˈtrɪp.əl/"}, {"english": "Zero", "portuguese": "Zero", "category": "Número", "type": "number", "ipa": "/ˈzɪə.rəʊ/"}, {"english": "Pair", "portuguese": "Par", "category": "Número", "type": "number", "ipa": "/peər/"}, {"english": "Dozen", "portuguese": "Dúzia", "category": "Número", "type": "number", "ipa": "/ˈdʌz.ən/"}, {"english": "Score", "portuguese": "Vinte unidades / Placar", "category": "Número", "type": "number", "ipa": "/skɔːr/"}, {"english": "Century", "portuguese": "Século (100 anos)", "category": "Número", "type": "number", "ipa": "/ˈsen.tʃər.i/"}, {"english": "Millennium", "portuguese": "Milênio (1000 anos)", "category": "Número", "type": "number", "ipa": "/mɪˈlen.i.əm/"}, {"english": "Left", "portuguese": "Esquerda", "category": "Direção", "type": "direction", "ipa": "/left/"}, {"english": "Right", "portuguese": "Direita", "category": "Direção", "type": "direction", "ipa": "/raɪt/"}, {"english": "Straight ahead", "portuguese": "Em frente", "category": "Direção", "type": "direction", "ipa": "/streɪt əˈhed/"}, {"english": "North", "portuguese": "Norte", "category": "Direção", "type": "direction", "ipa": "/nɔːθ/"}, {"english": "South", "portuguese": "Sul", "category": "Direção", "type": "direction", "ipa": "/saʊθ/"}, {"english": "East", "portuguese": "Leste", "category": "Direção", "type": "direction", "ipa": "/iːst/"}, {"english": "West", "portuguese": "Oeste", "category": "Direção", "type": "direction", "ipa": "/west/"}, {"english": "Up", "portuguese": "Para cima", "category": "Direção", "type": "direction", "ipa": "/ʌp/"}, {"english": "Down", "portuguese": "Para baixo", "category": "Direção", "type": "direction", "ipa": "/daʊn/"}, {"english": "Near", "portuguese": "Perto", "category": "Direção", "type": "direction", "ipa": "/nɪər/"}, {"english": "Far", "portuguese": "Longe", "category": "Direção", "type": "direction", "ipa": "/fɑːr/"}, {"english": "Inside", "portuguese": "Dentro", "category": "Direção", "type": "direction", "ipa": "/ɪnˈsaɪd/"}, {"english": "Outside", "portuguese": "Fora", "category": "Direção", "type": "direction", "ipa": "/ˌaʊtˈsaɪd/"}, {"english": "Behind", "portuguese": "Atrás", "category": "Direção", "type": "direction", "ipa": "/bɪˈhaɪnd/"}, {"english": "In front of", "portuguese": "Na frente de", "category": "Direção", "type": "direction", "ipa": "/ɪn frʌnt əv/"}, {"english": "Next to", "portuguese": "Ao lado de", "category": "Direção", "type": "direction", "ipa": "/nekst tuː/"}, {"english": "Between", "portuguese": "Entre (dois)", "category": "Direção", "type": "direction", "ipa": "/bɪˈtwiːn/"}, {"english": "Among", "portuguese": "Entre (vários)", "category": "Direção", "type": "direction", "ipa": "/əˈmʌŋ/"}, {"english": "Under", "portuguese": "Debaixo de / Sob", "category": "Direção", "type": "direction", "ipa": "/ˈʌn.dər/"}, {"english": "Above", "portuguese": "Acima de", "category": "Direção", "type": "direction", "ipa": "/əˈbʌv/"}, {"english": "Across from", "portuguese": "Do outro lado de", "category": "Direção", "type": "direction", "ipa": "/əˈkrɒs frɒm/"}, {"english": "Corner", "portuguese": "Esquina / Canto", "category": "Direção", "type": "direction", "ipa": "/ˈkɔː.nər/"}, {"english": "Center", "portuguese": "Centro", "category": "Direção", "type": "direction", "ipa": "/ˈsen.tər/"}, {"english": "Forward", "portuguese": "Para a frente", "category": "Direção", "type": "direction", "ipa": "/ˈfɔː.wəd/"}, {"english": "Backward", "portuguese": "Para trás", "category": "Direção", "type": "direction", "ipa": "/ˈbæk.wəd/"}, {"english": "Sideways", "portuguese": "De lado", "category": "Direção", "type": "direction", "ipa": "/ˈsaɪd.weɪz/"}, {"english": "Northeast", "portuguese": "Nordeste", "category": "Direção", "type": "direction", "ipa": "/ˌnɔːθˈiːst/"}, {"english": "Northwest", "portuguese": "Noroeste", "category": "Direção", "type": "direction", "ipa": "/ˌnɔːθˈwest/"}, {"english": "Southeast", "portuguese": "Sudeste", "category": "Direção", "type": "direction", "ipa": "/ˌsaʊθˈiːst/"}, {"english": "Southwest", "portuguese": "Sudoeste", "category": "Direção", "type": "direction", "ipa": "/ˌsaʊθˈwest/"}, {"english": "Top", "portuguese": "Topo / Parte superior", "category": "Direção", "type": "direction", "ipa": "/tɒp/"}, {"english": "Bottom", "portuguese": "Fundo / Parte inferior", "category": "Direção", "type": "direction", "ipa": "/ˈbɒt.əm/"}, {"english": "Middle", "portuguese": "Meio", "category": "Direção", "type": "direction", "ipa": "/ˈmɪd.əl/"}, {"english": "Edge", "portuguese": "Borda / Margem", "category": "Direção", "type": "direction", "ipa": "/edʒ/"}, {"english": "Opposite", "portuguese": "Oposto / De frente para", "category": "Direção", "type": "direction", "ipa": "/ˈɒp.ə.zɪt/"}, {"english": "Turn left", "portuguese": "Vire à esquerda", "category": "Direção", "type": "direction", "ipa": "/tɜːn left/"}, {"english": "Turn right", "portuguese": "Vire à direita", "category": "Direção", "type": "direction", "ipa": "/tɜːn raɪt/"}, {"english": "Go straight", "portuguese": "Siga reto", "category": "Direção", "type": "direction", "ipa": "/ɡəʊ streɪt/"}, {"english": "Cross the street", "portuguese": "Atravesse a rua", "category": "Direção", "type": "direction", "ipa": "/krɒs ðə striːt/"}, {"english": "Around", "portuguese": "Ao redor de", "category": "Direção", "type": "direction", "ipa": "/əˈraʊnd/"}, {"english": "Through", "portuguese": "Através de", "category": "Direção", "type": "direction", "ipa": "/θruː/"}, {"english": "Along", "portuguese": "Ao longo de", "category": "Direção", "type": "direction", "ipa": "/əˈlɒŋ/"}, {"english": "Towards", "portuguese": "Em direção a", "category": "Direção", "type": "direction", "ipa": "/təˈwɔːdz/"}, {"english": "Away from", "portuguese": "Longe de / Distante de", "category": "Direção", "type": "direction", "ipa": "/əˈweɪ frɒm/"}, {"english": "Upstairs", "portuguese": "Andar de cima / Escada acima", "category": "Direção", "type": "direction", "ipa": "/ˌʌpˈsteəz/"}, {"english": "Downstairs", "portuguese": "Andar de baixo / Escada abaixo", "category": "Direção", "type": "direction", "ipa": "/ˌdaʊnˈsteəz/"}, {"english": "Out of", "portuguese": "Para fora de", "category": "Direção", "type": "direction", "ipa": "/aʊt əv/"}, {"english": "Into", "portuguese": "Para dentro de", "category": "Direção", "type": "direction", "ipa": "/ˈɪn.tuː/"}, {"english": "Onto", "portuguese": "Para cima de (movimento)", "category": "Direção", "type": "direction", "ipa": "/ˈɒn.tuː/"}, {"english": "Off", "portuguese": "Fora de / Para fora", "category": "Direção", "type": "direction", "ipa": "/ɒf/"}, {"english": "Beautiful", "portuguese": "Bonito(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈbjuː.tɪ.fəl/"}, {"english": "Ugly", "portuguese": "Feio(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈʌɡ.li/"}, {"english": "Fast", "portuguese": "Rápido(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/fɑːst/"}, {"english": "Slow", "portuguese": "Lento(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/sləʊ/"}, {"english": "Important", "portuguese": "Importante", "category": "Adjetivo", "type": "adjective", "ipa": "/ɪmˈpɔː.tənt/"}, {"english": "Small", "portuguese": "Pequeno(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/smɔːl/"}, {"english": "Big", "portuguese": "Grande", "category": "Adjetivo", "type": "adjective", "ipa": "/bɪɡ/"}, {"english": "Strong", "portuguese": "Forte", "category": "Adjetivo", "type": "adjective", "ipa": "/strɒŋ/"}, {"english": "Weak", "portuguese": "Fraco(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/wiːk/"}, {"english": "Happy", "portuguese": "Feliz", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈhæp.i/"}, {"english": "Sad", "portuguese": "Triste", "category": "Adjetivo", "type": "adjective", "ipa": "/sæd/"}, {"english": "Hot", "portuguese": "Quente", "category": "Adjetivo", "type": "adjective", "ipa": "/hɒt/"}, {"english": "Cold", "portuguese": "Frio(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/kəʊld/"}, {"english": "Easy", "portuguese": "Fácil", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈiː.zi/"}, {"english": "Difficult", "portuguese": "Difícil", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈdɪf.ɪ.kəlt/"}, {"english": "Young", "portuguese": "Jovem", "category": "Adjetivo", "type": "adjective", "ipa": "/jʌŋ/"}, {"english": "Old", "portuguese": "Velho(a) / Antigo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/əʊld/"}, {"english": "New", "portuguese": "Novo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/njuː/"}, {"english": "Clean", "portuguese": "Limpo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/kliːn/"}, {"english": "Dirty", "portuguese": "Sujo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈdɜː.ti/"}, {"english": "Rich", "portuguese": "Rico(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/rɪtʃ/"}, {"english": "Poor", "portuguese": "Pobre", "category": "Adjetivo", "type": "adjective", "ipa": "/pɔːr/"}, {"english": "Safe", "portuguese": "Seguro(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/seɪf/"}, {"english": "Dangerous", "portuguese": "Perigoso(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈdeɪn.dʒər.əs/"}, {"english": "Cheap", "portuguese": "Barato(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/tʃiːp/"}, {"english": "Expensive", "portuguese": "Caro(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ɪkˈspen.sɪv/"}, {"english": "Bright", "portuguese": "Brilhante / Claro", "category": "Adjetivo", "type": "adjective", "ipa": "/braɪt/"}, {"english": "Dark", "portuguese": "Escuro(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/dɑːk/"}, {"english": "Quiet", "portuguese": "Silencioso(a) / Calmo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈkwaɪ.ət/"}, {"english": "Noisy", "portuguese": "Barulhento(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈnɔɪ.zi/"}, {"english": "Early", "portuguese": "Cedo", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈɜː.li/"}, {"english": "Late", "portuguese": "Tarde / Atrasado(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/leɪt/"}, {"english": "Full", "portuguese": "Cheio(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/fʊl/"}, {"english": "Empty", "portuguese": "Vazio(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈemp.ti/"}, {"english": "Heavy", "portuguese": "Pesado(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈhev.i/"}, {"english": "Light", "portuguese": "Leve / Claro", "category": "Adjetivo", "type": "adjective", "ipa": "/laɪt/"}, {"english": "Kind", "portuguese": "Gentil / Bondoso(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/kaɪnd/"}, {"english": "Polite", "portuguese": "Educado(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/pəˈlaɪt/"}, {"english": "Rude", "portuguese": "Grosseiro(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ruːd/"}, {"english": "Smart", "portuguese": "Inteligente / Esperto(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/smɑːt/"}, {"english": "Stupid", "portuguese": "Tolo(a) / Estúpido(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈstjuː.pɪd/"}, {"english": "Healthy", "portuguese": "Saudável", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈhel.θi/"}, {"english": "Sick", "portuguese": "Doente", "category": "Adjetivo", "type": "adjective", "ipa": "/sɪk/"}, {"english": "Brave", "portuguese": "Corajoso(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/breɪv/"}, {"english": "Scared", "portuguese": "Assustado(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/skeəd/"}, {"english": "Famous", "portuguese": "Famoso(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈfeɪ.məs/"}, {"english": "Busy", "portuguese": "Ocupado(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈbɪz.i/"}, {"english": "Free", "portuguese": "Livre / Grátis", "category": "Adjetivo", "type": "adjective", "ipa": "/friː/"}, {"english": "Sweet", "portuguese": "Doce", "category": "Adjetivo", "type": "adjective", "ipa": "/swiːt/"}, {"english": "Bitter", "portuguese": "Amargo(a)", "category": "Adjetivo", "type": "adjective", "ipa": "/ˈbɪt.ər/"}, {"english": "House", "portuguese": "Casa", "category": "Substantivo", "type": "noun", "ipa": "/haʊs/"}, {"english": "Water", "portuguese": "Água", "category": "Substantivo", "type": "noun", "ipa": "/ˈwɔː.tər/"}, {"english": "Time", "portuguese": "Tempo / Hora", "category": "Substantivo", "type": "noun", "ipa": "/taɪm/"}, {"english": "People", "portuguese": "Pessoas", "category": "Substantivo", "type": "noun", "ipa": "/ˈpiː.pəl/"}, {"english": "World", "portuguese": "Mundo", "category": "Substantivo", "type": "noun", "ipa": "/wɜːld/"}, {"english": "Food", "portuguese": "Comida", "category": "Substantivo", "type": "noun", "ipa": "/fuːd/"}, {"english": "City", "portuguese": "Cidade", "category": "Substantivo", "type": "noun", "ipa": "/ˈsɪt.i/"}, {"english": "Country", "portuguese": "País", "category": "Substantivo", "type": "noun", "ipa": "/ˈkʌn.tri/"}, {"english": "Friend", "portuguese": "Amigo(a)", "category": "Substantivo", "type": "noun", "ipa": "/frend/"}, {"english": "Family", "portuguese": "Família", "category": "Substantivo", "type": "noun", "ipa": "/ˈfæm.əl.i/"}, {"english": "Book", "portuguese": "Livro", "category": "Substantivo", "type": "noun", "ipa": "/bʊk/"}, {"english": "Money", "portuguese": "Dinheiro", "category": "Substantivo", "type": "noun", "ipa": "/ˈmʌn.i/"}, {"english": "Job", "portuguese": "Emprego / Trabalho", "category": "Substantivo", "type": "noun", "ipa": "/dʒɒb/"}, {"english": "Car", "portuguese": "Carro", "category": "Substantivo", "type": "noun", "ipa": "/kɑːr/"}, {"english": "School", "portuguese": "Escola", "category": "Substantivo", "type": "noun", "ipa": "/skuːl/"}, {"english": "Computer", "portuguese": "Computador", "category": "Substantivo", "type": "noun", "ipa": "/kəmˈpjuː.tər/"}, {"english": "Phone", "portuguese": "Telefone", "category": "Substantivo", "type": "noun", "ipa": "/fəʊn/"}, {"english": "Street", "portuguese": "Rua", "category": "Substantivo", "type": "noun", "ipa": "/striːt/"}, {"english": "Road", "portuguese": "Estrada / Rodovia", "category": "Substantivo", "type": "noun", "ipa": "/rəʊd/"}, {"english": "Day", "portuguese": "Dia", "category": "Substantivo", "type": "noun", "ipa": "/deɪ/"}, {"english": "Night", "portuguese": "Noite", "category": "Substantivo", "type": "noun", "ipa": "/naɪt/"}, {"english": "Sun", "portuguese": "Sol", "category": "Substantivo", "type": "noun", "ipa": "/sʌn/"}, {"english": "Moon", "portuguese": "Lua", "category": "Substantivo", "type": "noun", "ipa": "/muːn/"}, {"english": "Star", "portuguese": "Estrela", "category": "Substantivo", "type": "noun", "ipa": "/stɑːr/"}, {"english": "Air", "portuguese": "Ar", "category": "Substantivo", "type": "noun", "ipa": "/eər/"}, {"english": "Earth", "portuguese": "Terra / Planeta Terra", "category": "Substantivo", "type": "noun", "ipa": "/ɜːθ/"}, {"english": "Fire", "portuguese": "Fogo", "category": "Substantivo", "type": "noun", "ipa": "/faɪər/"}, {"english": "Tree", "portuguese": "Árvore", "category": "Substantivo", "type": "noun", "ipa": "/triː/"}, {"english": "Flower", "portuguese": "Flor", "category": "Substantivo", "type": "noun", "ipa": "/flaʊər/"}, {"english": "Animal", "portuguese": "Animal", "category": "Substantivo", "type": "noun", "ipa": "/ˈæn.ɪ.məl/"}, {"english": "Dog", "portuguese": "Cão / Cachorro", "category": "Substantivo", "type": "noun", "ipa": "/dɒɡ/"}, {"english": "Cat", "portuguese": "Gato", "category": "Substantivo", "type": "noun", "ipa": "/kæt/"}, {"english": "Bird", "portuguese": "Pássaro", "category": "Substantivo", "type": "noun", "ipa": "/bɜːd/"}, {"english": "Fish", "portuguese": "Peixe", "category": "Substantivo", "type": "noun", "ipa": "/fɪʃ/"}, {"english": "Child", "portuguese": "Criança", "category": "Substantivo", "type": "noun", "ipa": "/tʃaɪld/"}, {"english": "Man", "portuguese": "Homem", "category": "Substantivo", "type": "noun", "ipa": "/mæn/"}, {"english": "Woman", "portuguese": "Mulher", "category": "Substantivo", "type": "noun", "ipa": "/ˈwʊm.ən/"}, {"english": "Place", "portuguese": "Lugar / Local", "category": "Substantivo", "type": "noun", "ipa": "/pleɪs/"}, {"english": "Problem", "portuguese": "Problema", "category": "Substantivo", "type": "noun", "ipa": "/ˈprɒb.ləm/"}, {"english": "Solution", "portuguese": "Solução", "category": "Substantivo", "type": "noun", "ipa": "/səˈluː.ʃən/"}, {"english": "Hand", "portuguese": "Mão", "category": "Substantivo", "type": "noun", "ipa": "/hænd/"}, {"english": "Eye", "portuguese": "Olho", "category": "Substantivo", "type": "noun", "ipa": "/aɪ/"}, {"english": "Head", "portuguese": "Cabeça", "category": "Substantivo", "type": "noun", "ipa": "/hed/"}, {"english": "Heart", "portuguese": "Coração", "category": "Substantivo", "type": "noun", "ipa": "/hɑːt/"}, {"english": "Life", "portuguese": "Vida", "category": "Substantivo", "type": "noun", "ipa": "/laɪf/"}, {"english": "Door", "portuguese": "Porta", "category": "Substantivo", "type": "noun", "ipa": "/dɔːr/"}, {"english": "Window", "portuguese": "Janela", "category": "Substantivo", "type": "noun", "ipa": "/ˈwɪn.dəʊ/"}, {"english": "Table", "portuguese": "Mesa", "category": "Substantivo", "type": "noun", "ipa": "/ˈteɪ.bəl/"}, {"english": "Chair", "portuguese": "Cadeira", "category": "Substantivo", "type": "noun", "ipa": "/tʃeər/"}, {"english": "Music", "portuguese": "Música", "category": "Substantivo", "type": "noun", "ipa": "/ˈmjuː.zɪk/"}];
+    const STORAGE_KEY = 'vocabMasterStats';
+    const SOUND_KEY = 'vocabMasterAnswerSound';
+    let vocabularyBank = [];
+    let poolsByType = {};
+    let currentWord = null;
+    let currentOptions = [];
+    let answered = false;
+    let practiceErrorsMode = false;
+    let lastReviewFocus = null;
+    let answerSound = true;
+    let stats = { correct: 0, wrong: 0, dontKnow: 0, streak: 0, seen: 0, wrongList: [] };
+    let currentFilter = 'all';
+
+    const el = {};
+    function cacheEls() {
+      ['filter-category','score-correct','score-wrong','score-dontknow','score-accuracy','score-streak','score-seen',
+       'game-card','word-badge','word-display','word-ipa','options-container','feedback-container',
+       'feedback-text','wrong-count-badge','review-modal','review-list','btn-speak','btn-next',
+       'btn-export','import-file','btn-review','btn-reset','btn-close-review','btn-practice-errors','btn-practice-all','mode-hint',
+       'btn-sound','btn-sound-icon','btn-sound-label'
+      ].forEach(id => { el[id] = document.getElementById(id); });
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function sampleDistinct(arr, count, excludeValue) {
+      const result = [];
+      const used = new Set();
+      let attempts = 0;
+      while (result.length < count && attempts < 200) {
+        attempts++;
+        const item = arr[Math.floor(Math.random() * arr.length)];
+        if (!item || item.portuguese === excludeValue || used.has(item.portuguese)) continue;
+        used.add(item.portuguese);
+        result.push(item.portuguese);
+      }
+      return result;
+    }
+
+    function loadStats() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (typeof data.correct === 'number' && typeof data.wrong === 'number') {
+          stats = {
+            correct: data.correct || 0,
+            wrong: data.wrong || 0,
+            dontKnow: data.dontKnow || 0,
+            streak: data.streak || 0,
+            seen: data.seen || 0,
+            wrongList: Array.isArray(data.wrongList) ? data.wrongList : []
+          };
+        }
+      } catch (e) {}
+    }
+
+    function saveStats() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); } catch (e) {}
+    }
+
+    function loadSoundSetting() {
+      try {
+        const raw = localStorage.getItem(SOUND_KEY);
+        if (raw === '0' || raw === 'false') answerSound = false;
+        else if (raw === '1' || raw === 'true') answerSound = true;
+      } catch (e) {}
+      updateSoundUI();
+    }
+
+    function saveSoundSetting() {
+      try { localStorage.setItem(SOUND_KEY, answerSound ? '1' : '0'); } catch (e) {}
+    }
+
+    function updateSoundUI() {
+      if (!el['btn-sound']) return;
+      const on = !!answerSound;
+      el['btn-sound'].setAttribute('aria-pressed', on ? 'true' : 'false');
+      el['btn-sound-label'].innerText = on ? 'Som' : 'Mudo';
+      el['btn-sound'].title = on ? 'Desativar som das respostas' : 'Ativar som das respostas';
+      el['btn-sound-icon'].className = 'icon ' + (on ? 'text-indigo-400' : 'text-slate-500');
+      el['btn-sound-icon'].innerHTML = on
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+    }
+
+    function toggleAnswerSound() {
+      answerSound = !answerSound;
+      saveSoundSetting();
+      updateSoundUI();
+    }
+
+    function buildPools() {
+      poolsByType = { all: vocabularyBank };
+      vocabularyBank.forEach(item => {
+        const t = item.type || 'other';
+        if (!poolsByType[t]) poolsByType[t] = [];
+        poolsByType[t].push(item);
+      });
+    }
+
+    function getActivePool() {
+      if (practiceErrorsMode) {
+        if (stats.wrongList.length > 0) return stats.wrongList;
+        practiceErrorsMode = false;
+        el['mode-hint'].classList.add('hidden');
+      }
+      return poolsByType[currentFilter] || poolsByType.all || vocabularyBank;
+    }
+
+    function pickWord(pool) {
+      if (pool.length <= 1) return pool[0] || null;
+      let candidate = pool[Math.floor(Math.random() * pool.length)];
+      let tries = 0;
+      while (currentWord && candidate && candidate.english === currentWord.english && tries < 8) {
+        candidate = pool[Math.floor(Math.random() * pool.length)];
+        tries++;
+      }
+      return candidate;
+    }
+
+    function generateOptions() {
+      const correctText = currentWord.portuguese;
+      let distractorPool = poolsByType[currentWord.type] || poolsByType.all || vocabularyBank;
+      let wrongs = sampleDistinct(distractorPool, 2, correctText);
+      if (wrongs.length < 2) wrongs = sampleDistinct(vocabularyBank, 2, correctText);
+      return shuffle([correctText, ...wrongs.slice(0, 2)]);
+    }
+
+    function loadQuestion() {
+      const pool = getActivePool();
+      if (!pool || pool.length === 0) {
+        el['word-badge'].innerText = 'Sem dados';
+        el['word-display'].innerText = 'Carregue o vocabulário';
+        el['word-ipa'].innerText = '';
+        el['options-container'].innerHTML = '';
+        return;
+      }
+      currentWord = pickWord(pool);
+      if (!currentWord) return;
+      answered = false;
+      stats.seen = (stats.seen || 0) + 1;
+      saveStats();
+      updateStatsUI();
+
+      el['word-badge'].innerText = currentWord.category;
+      el['word-display'].innerText = currentWord.english;
+      el['word-ipa'].innerText = currentWord.ipa || '';
+      el['feedback-container'].classList.add('hidden');
+      el['mode-hint'].classList.toggle('hidden', !practiceErrorsMode);
+
+      currentOptions = generateOptions();
+      renderOptions();
+    }
+
+    const DONT_KNOW = '__DONT_KNOW__';
+
+    function renderOptions() {
+      el['options-container'].innerHTML = '';
+      const allOptions = [...currentOptions, DONT_KNOW];
+      allOptions.forEach((optionText, idx) => {
+        const isDontKnow = optionText === DONT_KNOW;
+        const label = isDontKnow ? 'Não sei' : optionText;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.value = optionText;
+        btn.dataset.index = String(idx + 1);
+        btn.className = isDontKnow
+          ? "w-full text-left bg-slate-800/60 hover:bg-slate-700/80 border border-dashed border-slate-500 hover:border-sky-400/60 text-slate-300 font-medium py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg transition duration-150 shadow-sm flex items-center justify-between text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          : "w-full text-left bg-slate-700/60 hover:bg-slate-700 border border-slate-600/80 hover:border-indigo-500/50 text-slate-100 font-medium py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg transition duration-150 shadow-sm flex items-center justify-between text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+        btn.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${idx + 1}.</span>${escapeHtml(label)}</span>${ICONS.circle}`;
+        btn.addEventListener('click', () => checkAnswer(optionText, btn));
+        el['options-container'].appendChild(btn);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function checkAnswer(selectedOption, buttonElement) {
+      if (answered) return;
+      answered = true;
+      const allButtons = el['options-container'].querySelectorAll('button');
+      allButtons.forEach(btn => btn.disabled = true);
+
+      if (selectedOption === DONT_KNOW) {
+        stats.dontKnow = (stats.dontKnow || 0) + 1;
+        stats.streak = 0;
+        if (!stats.wrongList.some(w => w.english === currentWord.english)) {
+          stats.wrongList.push(currentWord);
+        }
+        buttonElement.className = "w-full text-left bg-sky-950/70 border-2 border-sky-500 text-sky-200 font-bold py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg flex items-center justify-between text-sm";
+        buttonElement.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${buttonElement.dataset.index}.</span>Não sei</span>${ICONS.circle}`;
+        allButtons.forEach(btn => {
+          if (btn.dataset.value === currentWord.portuguese) {
+            btn.className = "w-full text-left bg-emerald-950/50 border border-emerald-600 text-emerald-300 font-medium py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg flex items-center justify-between text-sm";
+            btn.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${btn.dataset.index}.</span>${escapeHtml(btn.dataset.value)}</span>${ICONS.check}`;
+          }
+        });
+        el['feedback-text'].innerText = `ℹ️ Você marcou "Não sei". O correto é: "${currentWord.portuguese}"`;
+        el['feedback-text'].className = "text-sm sm:text-base font-bold text-sky-300 mb-1.5";
+        playTone(330, 0.12);
+      } else if (selectedOption === currentWord.portuguese) {
+        stats.correct++;
+        stats.streak++;
+        if (practiceErrorsMode) {
+          stats.wrongList = stats.wrongList.filter(w => w.english !== currentWord.english);
+        }
+        buttonElement.className = "w-full text-left bg-emerald-950/80 border-2 border-emerald-500 text-emerald-200 font-bold py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg animate-bounce-short flex items-center justify-between text-sm";
+        buttonElement.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${buttonElement.dataset.index}.</span>${escapeHtml(selectedOption)}</span>${ICONS.check}`;
+        el['feedback-text'].innerText = "✨ Excelente! Resposta Correta.";
+        el['feedback-text'].className = "text-sm sm:text-base font-bold text-emerald-400 mb-1.5";
+        playTone(587, 0.15);
+      } else {
+        stats.wrong++;
+        stats.streak = 0;
+        if (!stats.wrongList.some(w => w.english === currentWord.english)) {
+          stats.wrongList.push(currentWord);
+        }
+        buttonElement.className = "w-full text-left bg-rose-950/80 border-2 border-rose-500 text-rose-200 font-bold py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg animate-shake flex items-center justify-between text-sm";
+        buttonElement.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${buttonElement.dataset.index}.</span>${escapeHtml(selectedOption)}</span>${ICONS.xmark}`;
+        allButtons.forEach(btn => {
+          if (btn.dataset.value === currentWord.portuguese) {
+            btn.className = "w-full text-left bg-emerald-950/50 border border-emerald-600 text-emerald-300 font-medium py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg flex items-center justify-between text-sm";
+            btn.innerHTML = `<span><span class="text-slate-400 text-[11px] mr-1.5">${btn.dataset.index}.</span>${escapeHtml(btn.dataset.value)}</span>${ICONS.check}`;
+          }
+        });
+        el['feedback-text'].innerText = `❌ Incorreto. O correto é: "${currentWord.portuguese}"`;
+        el['feedback-text'].className = "text-sm sm:text-base font-bold text-rose-400 mb-1.5";
+        playTone(220, 0.25);
+      }
+
+      saveStats();
+      updateStatsUI();
+      el['feedback-container'].classList.remove('hidden');
+      el['btn-next'].focus();
+    }
+
+    function nextQuestion() { loadQuestion(); }
+
+    function updateStatsUI() {
+      el['score-correct'].innerText = stats.correct;
+      el['score-wrong'].innerText = stats.wrong;
+      el['score-dontknow'].innerText = stats.dontKnow || 0;
+      el['score-streak'].innerText = `${stats.streak} 🔥`;
+      el['score-seen'].innerText = stats.seen || 0;
+      const total = stats.correct + stats.wrong;
+      const acc = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
+      el['score-accuracy'].innerText = `${acc}%`;
+      el['wrong-count-badge'].innerText = stats.wrongList.length;
+    }
+
+    function speakWord() {
+      if (!currentWord || !('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(currentWord.english);
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
+    }
+
+    let audioCtx;
+    function playTone(freq, duration) {
+      if (!answerSound) return;
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function exportJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stats, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", "vocab_master_progress.json");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function importJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (typeof importedData.correct === 'number' && typeof importedData.wrong === 'number') {
+            stats = {
+              correct: importedData.correct || 0,
+              wrong: importedData.wrong || 0,
+              dontKnow: importedData.dontKnow || 0,
+              streak: importedData.streak || 0,
+              seen: importedData.seen || 0,
+              wrongList: Array.isArray(importedData.wrongList) ? importedData.wrongList : []
+            };
+            saveStats();
+            updateStatsUI();
+            alert("Progresso restaurado com sucesso!");
+          } else {
+            alert("Arquivo JSON em formato inválido.");
+          }
+        } catch (err) {
+          alert("Erro ao ler o arquivo JSON.");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function toggleReviewModal(show) {
+      const modal = el['review-modal'];
+      const open = typeof show === 'boolean' ? show : modal.classList.contains('hidden');
+      if (open) {
+        lastReviewFocus = document.activeElement;
+        renderReviewList();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        el['btn-close-review'].focus();
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (lastReviewFocus && lastReviewFocus.focus) lastReviewFocus.focus();
+      }
+    }
+
+    function renderReviewList() {
+      const list = el['review-list'];
+      list.innerHTML = '';
+      if (stats.wrongList.length === 0) {
+        list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Nenhum erro registrado até o momento! 🎉</p>';
+        return;
+      }
+      stats.wrongList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = "bg-slate-700/50 border border-slate-600/60 p-3 rounded-lg flex justify-between items-center text-sm gap-3";
+        div.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-100">${escapeHtml(item.english)}</span>
+            <span class="text-xs text-slate-400 block">${escapeHtml(item.category || '')}</span>
+          </div>
+          <span class="text-emerald-400 font-medium text-right">${escapeHtml(item.portuguese)}</span>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function setPracticeErrorsMode(on) {
+      if (on && stats.wrongList.length === 0) {
+        alert('Não há erros para praticar.');
+        return;
+      }
+      practiceErrorsMode = !!on;
+      el['mode-hint'].classList.toggle('hidden', !practiceErrorsMode);
+      toggleReviewModal(false);
+      loadQuestion();
+    }
+
+    function resetStats() {
+      if (!confirm('Resetar todos os números (acertos, erros, não sei, combo, vistas e lista de erros)?')) return;
+      stats = { correct: 0, wrong: 0, dontKnow: 0, streak: 0, seen: 0, wrongList: [] };
+      practiceErrorsMode = false;
+      el['mode-hint'].classList.add('hidden');
+      saveStats();
+      updateStatsUI();
+      toggleReviewModal(false);
+      loadQuestion();
+    }
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape' && !el['review-modal'].classList.contains('hidden')) {
+        e.preventDefault();
+        toggleReviewModal(false);
+        return;
+      }
+      if (!el['review-modal'].classList.contains('hidden')) return;
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      if (!answered && ['1','2','3','4'].includes(e.key)) {
+        const idx = Number(e.key) - 1;
+        const btn = el['options-container'].querySelectorAll('button')[idx];
+        if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+        return;
+      }
+      if (answered && (e.key === 'Enter' || e.key === 'n' || e.key === 'N')) {
+        e.preventDefault(); nextQuestion(); return;
+      }
+      if (e.key === 's' || e.key === 'S') {
+        e.preventDefault(); speakWord(); return;
+      }
+    }
+
+    async function init() {
+      cacheEls();
+      loadStats();
+      loadSoundSetting();
+      updateStatsUI();
+
+      el['filter-category'].addEventListener('change', () => {
+        currentFilter = el['filter-category'].value;
+        if (currentFilter !== 'all') practiceErrorsMode = false;
+        loadQuestion();
+      });
+      el['btn-speak'].addEventListener('click', speakWord);
+      el['btn-next'].addEventListener('click', nextQuestion);
+      el['btn-export'].addEventListener('click', exportJSON);
+      el['import-file'].addEventListener('change', importJSON);
+      el['btn-sound'].addEventListener('click', toggleAnswerSound);
+      el['btn-review'].addEventListener('click', () => toggleReviewModal());
+      el['btn-reset'].addEventListener('click', resetStats);
+      el['btn-close-review'].addEventListener('click', () => toggleReviewModal(false));
+      el['btn-practice-errors'].addEventListener('click', () => setPracticeErrorsMode(true));
+      el['btn-practice-all'].addEventListener('click', () => setPracticeErrorsMode(false));
+      el['review-modal'].addEventListener('click', (e) => { if (e.target === el['review-modal']) toggleReviewModal(false); });
+      document.addEventListener('keydown', onKeyDown);
+
+      try {
+        const res = await fetch('vocab.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error('Formato inválido');
+        vocabularyBank = data;
+      } catch (err) {
+        console.warn('Usando vocabulário embutido (fetch de vocab.json indisponível).', err);
+        vocabularyBank = Array.isArray(VOCAB_FALLBACK) ? VOCAB_FALLBACK : [];
+      }
+      if (!vocabularyBank.length) {
+        el['word-badge'].innerText = 'Erro';
+        el['word-display'].innerText = 'Vocabulário indisponível';
+        el['word-ipa'].innerText = '';
+        el['options-container'].innerHTML = '';
+        return;
+      }
+      buildPools();
+      loadQuestion();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

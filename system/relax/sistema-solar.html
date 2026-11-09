@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Solar em Movimento - Fly Relaxamento</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            background-color: #0f1117;
+            color: #c8d2e1;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body class="relative w-screen h-screen select-none">
+
+    <!-- HUD DE NAVEGAÇÃO / SAÍDA -->
+    <div id="hud" class="absolute top-4 left-4 z-40 flex items-center gap-3 bg-slate-900/85 backdrop-blur border border-slate-800 px-4 py-2 rounded-xl shadow-lg flex-wrap">
+        <span id="titulo-modo-atual" class="text-xs md:text-sm text-slate-300 font-semibold">Sistema Solar em Movimento</span>
+        
+        <!-- CONTROLES EXCLUSIVOS DO SISTEMA SOLAR -->
+        <div id="controles-velocidade" class="flex items-center gap-3 ml-3 pl-3 border-l border-slate-700 flex-wrap">
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">Velocidade:</span>
+                <button id="btn-menos" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer">-</button>
+                <span id="label-velocidade" class="text-xs font-mono text-sky-300 w-10 text-center">0.25x</span>
+                <button id="btn-mais" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer">+</button>
+            </div>
+            <span class="text-slate-700">|</span>
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">Zoom:</span>
+                <button id="btn-zoom-menos" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer">-</button>
+                <span id="label-zoom" class="text-xs font-mono text-emerald-300 w-12 text-center">1.00x</span>
+                <button id="btn-zoom-mais" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer">+</button>
+            </div>
+            <span class="text-slate-700">|</span>
+            <!-- CHECKBOX DO CINTURÃO -->
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="check-cinturao" checked class="w-4 h-4 accent-sky-500 rounded bg-slate-800 border-slate-700 cursor-pointer">
+                <span class="text-xs text-slate-300 font-medium">Asteroides</span>
+            </label>
+            <span class="text-slate-700">|</span>
+            <!-- SELETOR DE TIPO DE ESTILO -->
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">Estilo:</span>
+                <select id="select-estilo-planeta" class="bg-slate-800 text-sky-300 text-xs font-medium px-2 py-1 rounded border border-slate-700 cursor-pointer focus:outline-none">
+                    <option value="plana">Visão Plana (Vista de Cima)</option>
+                    <option value="3d" selected>Visão 3D (Inclinada)</option>
+                </select>
+            </div>
+            <span class="text-slate-700">|</span>
+            <!-- BOTÃO DESTRUIR OVNI -->
+            <button id="btn-destruir-ovni" class="bg-rose-600/80 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1">
+                🚀 Destruir OVNI
+            </button>
+            <span class="text-slate-700">|</span>
+            <!-- BOTÃO CARRO ELON MUSK -->
+            <button id="btn-carro-musk" class="bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1">
+                🚗 Carro Elon Musk
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        let largura = canvas.width = window.innerWidth;
+        let altura = canvas.height = window.innerHeight;
+
+        let mouseX = largura / 2;
+        let mouseY = altura / 2;
+        let mouseXAlvo = largura / 2;
+        let mouseYAlvo = altura / 2;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseXAlvo = e.clientX;
+            mouseYAlvo = e.clientY;
+        });
+
+        window.addEventListener('resize', () => {
+            largura = canvas.width = window.innerWidth;
+            altura = canvas.height = window.innerHeight;
+            iniciarSistemaSolar();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = '../index.html';
+            }
+        });
+
+        let tempoGlobal = 0;
+        let animationFrameId = null;
+
+        let planetas = [];
+        let estrelasFundo = [];
+        let poeiraCosmica = [];
+        let cinturaoAsteroides = [];
+        let supernovas = [];
+        let buracosNegros = [];
+        let tempoSupernovas = 0;
+        let supernovaEtapa = 0;
+
+        let multVelocidadeSol = 0.25;
+        let fatorZoom = 1.00;
+        
+        let cometaSolar = {
+            ativo: true,
+            angulo: 0,
+            raioXBase: 250,
+            raioYBase: 120,
+            inclinacao: 0,
+            velocidade: 0.007,
+            sentido: 1,
+            corNucleo: '#f8fafc',
+            corRastro: 'rgba(186, 230, 253, ',
+            tamanho: 3.2,
+            trilha: [],
+            colisoesRecentes: new Map()
+        };
+        let cometaInterestelar = {
+            ativo: false,
+            t: -5.0,
+            anguloGeral: 0,
+            velocidade: 0.012,
+            corRastro: 'rgba(125, 211, 252, ',
+            corNucleo: '#e0f2fe',
+            tamanho: 3.8,
+            inicioX: 0,
+            inicioY: 0,
+            fimX: 0,
+            fimY: 0,
+            curva: 0,
+            trilha: [],
+            rastroParticulas: [],
+            proximoSpawnMs: 0
+        };
+        const INTERVALO_COMETA_INTERESTELAR_MS = 30000;
+        let galaxiaDistante = { x: 0, y: 0, anguloRotacao: 0 };
+        let nebulosaFundo = { x: 0, y: 0, raio: 180 };
+        let ovnis = [];
+        let controleOvni = { timerProx: 300, onda: 1 };
+
+        // A nave-mãe aparece após 15 segundos e dispara 7 segundos depois de chegar à Terra.
+        let vingancaAlien = {
+            ativa: false,
+            fase: 'AguardandoTempo', // 'AguardandoTempo', 'ComunicacaoAlien', 'IndoAteTerra', 'AguardandoDisparo', 'DisparandoRaio', 'IndoEmbora'
+            timerDelay: 0,
+            x: 0, y: 0,
+            timer: 0,
+            vx: 0, vy: 0,
+            xDestino: 0,
+            yDestino: 0
+        };
+        let terraDestruida = false;
+        let terraVibrando = false;
+        let ovniDestruidoTotal = false;
+
+        function destruirTerra(x, y) {
+            if (terraDestruida) return;
+
+            explosoesAtivas.push({ x, y, raioMax: 50, vida: 1.0 });
+            terraDestruida = true;
+            terraVibrando = false;
+            planetas = planetas.filter(p => p.nome !== 'Terra');
+            alienMsg.ativa = false;
+            fatalityMensagem.ativa = true;
+            fatalityMensagem.alpha = 0;
+            fatalityMensagem.timer = 240;
+            fatalityMensagem.yOffset = 0;
+        }
+
+        function gerarPosicaoForaSistemaSolar(cx, cy, margem = 40) {
+            const raioOrbitaExterna = Math.max(
+                passoRaioGlobal * 8.4 * fatorZoom,
+                ...planetas.map(planeta => planeta.distanciaBase * fatorZoom)
+            );
+            const pontosCandidatos = Array.from({ length: 100 }, () => ({
+                x: margem + Math.random() * Math.max(0, largura - margem * 2),
+                y: margem + Math.random() * Math.max(0, altura - margem * 2)
+            }));
+            const pontoForaSistema = pontosCandidatos.find(ponto =>
+                Math.hypot(ponto.x - cx, ponto.y - cy) > raioOrbitaExterna + margem
+            );
+
+            if (pontoForaSistema) return pontoForaSistema;
+
+            return [
+                { x: margem, y: margem },
+                { x: largura - margem, y: margem },
+                { x: margem, y: altura - margem },
+                { x: largura - margem, y: altura - margem }
+            ].reduce((maisDistante, ponto) =>
+                Math.hypot(ponto.x - cx, ponto.y - cy) > Math.hypot(maisDistante.x - cx, maisDistante.y - cy)
+                    ? ponto
+                    : maisDistante
+            );
+        }
+
+        let alienMsg = {
+            ativa: false,
+            texto: '⚠️ Kzzzt... #$@&! Q-ZORP VORP! 👽 INVASION IMMINENT!',
+            timer: 0
+        };
+
+        let fatalityMensagem = {
+            ativa: false,
+            alpha: 0,
+            timer: 0,
+            yOffset: 0
+        };
+
+        let carroMusk = {
+            ativo: false,
+            angulo: 0,
+            raioX: 340,
+            raioY: 190,
+            velocidade: 0.0035,
+            rotacaoCarro: 0
+        };
+
+        let missilTerra = { ativo: false, x: 0, y: 0, vx: 0, vy: 0, velocidade: 4.5 };
+
+        let explosoesAtivas = [];
+        let passoRaioGlobal = 0;
+
+        document.getElementById('btn-carro-musk').onclick = () => {
+            carroMusk.ativo = !carroMusk.ativo;
+            let btn = document.getElementById('btn-carro-musk');
+            if (carroMusk.ativo) {
+                btn.classList.replace('bg-amber-600/80', 'bg-emerald-600/80');
+                btn.classList.replace('hover:bg-amber-500', 'hover:bg-emerald-500');
+                btn.innerHTML = '🚗 Ocultar Carro';
+            } else {
+                btn.classList.replace('bg-emerald-600/80', 'bg-amber-600/80');
+                btn.classList.replace('hover:bg-emerald-500', 'hover:bg-amber-500');
+                btn.innerHTML = '🚗 Carro Elon Musk';
+            }
+        };
+
+        const btnDestruirOvni = document.getElementById('btn-destruir-ovni');
+        btnDestruirOvni.onclick = () => {
+            if (missilTerra.ativo) {
+                explosoesAtivas.push({ x: missilTerra.x, y: missilTerra.y, raioMax: 30, vida: 1.0 });
+                missilTerra.ativo = false;
+                btnDestruirOvni.style.display = 'inline-block';
+                btnDestruirOvni.classList.replace('bg-amber-600/80', 'bg-rose-600/80');
+                btnDestruirOvni.innerHTML = '🚀 Destruir OVNI';
+                return;
+            }
+
+            if (ovnis.length === 0 || terraDestruida || vingancaAlien.ativa) {
+                alert("O OVNI não está disponível ou a vingança já foi iniciada!");
+                return;
+            }
+
+            let terra = planetas.find(p => p.nome === 'Terra');
+            if (terra) {
+                let cx = largura / 2;
+                let cy = altura / 2;
+                const estiloVisual = document.getElementById('select-estilo-planeta').value;
+                let fatorInclinacao = (estiloVisual === '3d') ? 0.45 : 1.0;
+
+                let terraX = cx + Math.cos(terra.angulo) * (terra.distanciaBase * fatorZoom);
+                let terraY = cy + Math.sin(terra.angulo) * (terra.distanciaBase * fatorZoom) * fatorInclinacao;
+
+                missilTerra.x = terraX;
+                missilTerra.y = terraY;
+                missilTerra.ativo = true;
+
+                btnDestruirOvni.classList.replace('bg-rose-600/80', 'bg-amber-600/80');
+                btnDestruirOvni.innerHTML = '❌ Abortar Missão';
+            }
+        };
+
+        document.getElementById('select-estilo-planeta').onchange = (e) => {
+            if (e.target.value === '3d') {
+                fatorZoom = 2.00;
+            } else {
+                fatorZoom = 1.00;
+            }
+            document.getElementById('label-zoom').innerText = fatorZoom.toFixed(2) + 'x';
+
+            ovniDestruidoTotal = false;
+            btnDestruirOvni.style.display = 'inline-block';
+            btnDestruirOvni.classList.replace('bg-amber-600/80', 'bg-rose-600/80');
+            btnDestruirOvni.innerHTML = '🚀 Destruir OVNI';
+
+            if (terraDestruida || terraVibrando) {
+                terraDestruida = false;
+                terraVibrando = false;
+                vingancaAlien.ativa = false;
+                fatalityMensagem.ativa = false;
+                fatalityMensagem.alpha = 0;
+                alienMsg.ativa = false;
+                if (!planetas.some(p => p.nome === 'Terra')) {
+                    planetas.splice(2, 0, {
+                        nome: 'Terra',
+                        distanciaBase: passoRaioGlobal * 3.0,
+                        raio: 6,
+                        velocidadeBase: 0.005,
+                        cor: '#38bdf8',
+                        angulo: Math.random() * Math.PI * 2,
+                        anguloLua: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+        };
+
+        document.getElementById('btn-mais').onclick = () => {
+            if (multVelocidadeSol < 5.0) multVelocidadeSol = parseFloat((multVelocidadeSol + 0.25).toFixed(2));
+            document.getElementById('label-velocidade').innerText = multVelocidadeSol.toFixed(2) + 'x';
+        };
+        document.getElementById('btn-menos').onclick = () => {
+            if (multVelocidadeSol > 0.25) multVelocidadeSol = parseFloat((multVelocidadeSol - 0.25).toFixed(2));
+            document.getElementById('label-velocidade').innerText = multVelocidadeSol.toFixed(2) + 'x';
+        };
+
+        document.getElementById('btn-zoom-mais').onclick = () => {
+            if (fatorZoom < 3.0) fatorZoom = parseFloat((fatorZoom + 0.05).toFixed(2));
+            document.getElementById('label-zoom').innerText = fatorZoom.toFixed(2) + 'x';
+        };
+        document.getElementById('btn-zoom-menos').onclick = () => {
+            if (fatorZoom > 0.2) fatorZoom = parseFloat((fatorZoom - 0.05).toFixed(2));
+            document.getElementById('label-zoom').innerText = fatorZoom.toFixed(2) + 'x';
+        };
+
+        function agendarCometaInterestelar(delayMs = INTERVALO_COMETA_INTERESTELAR_MS) {
+            cometaInterestelar.proximoSpawnMs = performance.now() + delayMs;
+        }
+
+        function reiniciarCometaSolar() {
+            let raioMaxVis = Math.min(largura, altura) * 0.42;
+            cometaSolar.ativo = true;
+            cometaSolar.angulo = Math.random() * Math.PI * 2;
+            cometaSolar.raioXBase = raioMaxVis * (0.55 + Math.random() * 0.55);
+            cometaSolar.raioYBase = raioMaxVis * (0.22 + Math.random() * 0.42);
+            cometaSolar.inclinacao = (Math.random() - 0.5) * 0.55;
+            cometaSolar.sentido = Math.random() < 0.5 ? 1 : -1;
+            cometaSolar.velocidade = 0.004 + Math.random() * 0.009;
+            cometaSolar.tamanho = 2.6 + Math.random() * 1.8;
+            cometaSolar.trilha = [];
+            cometaSolar.colisoesRecentes.clear();
+
+            const cores = [
+                { nucleo: '#f8fafc', rastro: 'rgba(186, 230, 253, ' },
+                { nucleo: '#fde68a', rastro: 'rgba(253, 224, 71, ' },
+                { nucleo: '#c4b5fd', rastro: 'rgba(167, 139, 250, ' }
+            ];
+            const cor = cores[Math.floor(Math.random() * cores.length)];
+            cometaSolar.corNucleo = cor.nucleo;
+            cometaSolar.corRastro = cor.rastro;
+        }
+
+        function dispararCometaInterestelar() {
+            const margem = Math.max(largura, altura) * 0.18;
+            const borda = Math.floor(Math.random() * 4);
+            const alvoX = largura * (0.2 + Math.random() * 0.6);
+            const alvoY = altura * (0.2 + Math.random() * 0.6);
+            let inicioX, inicioY;
+
+            if (borda === 0) { inicioX = -margem; inicioY = Math.random() * altura; }
+            else if (borda === 1) { inicioX = largura + margem; inicioY = Math.random() * altura; }
+            else if (borda === 2) { inicioX = Math.random() * largura; inicioY = -margem; }
+            else { inicioX = Math.random() * largura; inicioY = altura + margem; }
+
+            const dx = alvoX - inicioX;
+            const dy = alvoY - inicioY;
+            const dist = Math.hypot(dx, dy) || 1;
+            const nx = -dy / dist;
+            const ny = dx / dist;
+            const curva = (Math.random() - 0.5) * Math.min(largura, altura) * 0.22;
+
+            cometaInterestelar.ativo = true;
+            cometaInterestelar.t = 0;
+            cometaInterestelar.inicioX = inicioX;
+            cometaInterestelar.inicioY = inicioY;
+            cometaInterestelar.fimX = alvoX + dx * 0.95 + nx * curva;
+            cometaInterestelar.fimY = alvoY + dy * 0.95 + ny * curva;
+            cometaInterestelar.curva = curva;
+            cometaInterestelar.velocidade = 0.0018 + Math.random() * 0.0016;
+            cometaInterestelar.tamanho = 3.0 + Math.random() * 2.0;
+            cometaInterestelar.trilha = [];
+            cometaInterestelar.rastroParticulas = [];
+
+            const matiz = 150 + Math.random() * 60; // tons entre verde e azul
+            const saturacao = 70 + Math.random() * 20;
+            const luzNucleo = 78 + Math.random() * 12;
+            const luzRastro = 58 + Math.random() * 14;
+            cometaInterestelar.corNucleo = `hsl(${matiz.toFixed(1)} ${saturacao.toFixed(1)}% ${luzNucleo.toFixed(1)}%)`;
+            cometaInterestelar.corRastro = `hsla(${matiz.toFixed(1)} ${saturacao.toFixed(1)}% ${luzRastro.toFixed(1)}% / `;
+        }
+
+        function reiniciarCometaInterestelar() {
+            cometaInterestelar.ativo = false;
+            cometaInterestelar.t = 0;
+            cometaInterestelar.trilha = [];
+            cometaInterestelar.rastroParticulas = [];
+            agendarCometaInterestelar(INTERVALO_COMETA_INTERESTELAR_MS);
+        }
+
+        function obterPosicaoCometaSolar(cx, cy, fatorInclinacao, zoom) {
+            const x = cx + Math.cos(cometaSolar.angulo) * (cometaSolar.raioXBase * zoom);
+            const y = cy + Math.sin(cometaSolar.angulo) * (cometaSolar.raioYBase * zoom * fatorInclinacao);
+            return { x, y };
+        }
+
+        function obterPosicaoCometaInterestelar() {
+            const x = cometaInterestelar.inicioX + (cometaInterestelar.fimX - cometaInterestelar.inicioX) * cometaInterestelar.t;
+            const y = cometaInterestelar.inicioY + (cometaInterestelar.fimY - cometaInterestelar.inicioY) * cometaInterestelar.t;
+            return { x, y };
+        }
+
+        function registrarExplosaoCometa(x, y, raioMax = 34) {
+            explosoesAtivas.push({ x, y, raioMax, vida: 1.0 });
+        }
+
+        function verificarColisoesCometa(x, y, raioCometa, origem, dadosPlanetas) {
+            const agora = performance.now();
+            for (const item of dadosPlanetas) {
+                const dist = Math.hypot(x - item.x, y - item.y);
+                if (dist < item.raioPlaneta + raioCometa) {
+                    const chave = `${origem}:${item.p.nome}`;
+                    const ultima = cometaSolar.colisoesRecentes.get(chave) || 0;
+                    if (agora - ultima < 1200) continue;
+                    cometaSolar.colisoesRecentes.set(chave, agora);
+                    registrarExplosaoCometa((x + item.x) / 2, (y + item.y) / 2, 28 + item.raioPlaneta * 2);
+                    if (origem === 'solar') {
+                        reiniciarCometaSolar();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function atualizarRastroInterestelar() {
+            if (!cometaInterestelar.rastroParticulas) cometaInterestelar.rastroParticulas = [];
+            const particulas = cometaInterestelar.rastroParticulas;
+            for (let i = particulas.length - 1; i >= 0; i--) {
+                particulas[i].vida -= 0.018;
+                if (particulas[i].vida <= 0) particulas.splice(i, 1);
+            }
+
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let i = 1; i < particulas.length; i++) {
+                const p0 = particulas[i - 1];
+                const p1 = particulas[i];
+                const vida = (p0.vida + p1.vida) * 0.5;
+                ctx.strokeStyle = `${cometaInterestelar.corRastro}${vida * 0.55})`;
+                ctx.lineWidth = Math.max(0.6, cometaInterestelar.tamanho * (0.35 + vida * 1.25));
+                ctx.beginPath();
+                ctx.moveTo(p0.x, p0.y);
+                ctx.lineTo(p1.x, p1.y);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function atualizarEdesenharCometas(cx, cy, fatorInclinacao, dadosPlanetas) {
+            // Cometa interestelar: passa por trás dos planetas, sem colisão e com rastro que esmaece.
+            atualizarRastroInterestelar();
+
+            const agora = performance.now();
+            if (!cometaInterestelar.ativo && cometaInterestelar.proximoSpawnMs && agora >= cometaInterestelar.proximoSpawnMs) {
+                dispararCometaInterestelar();
+            }
+
+            if (cometaInterestelar.ativo) {
+                cometaInterestelar.t += cometaInterestelar.velocidade * multVelocidadeSol;
+                if (cometaInterestelar.t >= 1.12) {
+                    cometaInterestelar.ativo = false;
+                    cometaInterestelar.t = 0;
+                    agendarCometaInterestelar(INTERVALO_COMETA_INTERESTELAR_MS);
+                } else {
+                    const pos = obterPosicaoCometaInterestelar();
+                    if (!cometaInterestelar.rastroParticulas) cometaInterestelar.rastroParticulas = [];
+                    cometaInterestelar.rastroParticulas.push({ x: pos.x, y: pos.y, vida: 1.0 });
+                    if (cometaInterestelar.rastroParticulas.length > 70) cometaInterestelar.rastroParticulas.shift();
+
+                    // Núcleo (sem ondulação na cauda; o rastro é formado pelas partículas acima)
+                    ctx.save();
+                    ctx.shadowColor = cometaInterestelar.corNucleo;
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = `${cometaInterestelar.corRastro}0.22)`;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, cometaInterestelar.tamanho * 1.9, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 6;
+                    ctx.fillStyle = cometaInterestelar.corNucleo;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, cometaInterestelar.tamanho, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        function iniciarEstrelasFundo() {
+            let cx = largura / 2;
+            let cy = altura / 2;
+            let raioMaximoVisivel = Math.min(largura, altura) * 0.42;
+
+            estrelasFundo = Array.from({length: 120}, () => ({
+                x: Math.random() * largura, y: Math.random() * altura,
+                baseX: Math.random() * largura, baseY: Math.random() * altura,
+                tamanho: Math.random() * 1.8 + 0.5,
+                frequencia: 0.02 + Math.random() * 0.06,
+                fase: Math.random() * Math.PI * 2,
+                tipoCor: Math.floor(Math.random() * 3)
+            }));
+
+            estrelasFundo.forEach(e => { e.baseX = e.x; e.baseY = e.y; });
+
+            poeiraCosmica = Array.from({length: 160}, () => {
+                let ang = Math.random() * Math.PI * 2;
+                let dist = raioMaximoVisivel * 1.3 + Math.random() * (Math.max(largura, altura) * 0.45);
+                let posX = cx + Math.cos(ang) * dist;
+                let posY = cy + Math.sin(ang) * dist;
+                return { x: posX, y: posY, baseX: posX, baseY: posY, tamanho: Math.random() * 1.5 + 0.4, alfa: Math.random() * 0.5 + 0.1 };
+            });
+
+            let raioMinCinturao = passoRaioGlobal * 4.4;
+            let raioMaxCinturao = passoRaioGlobal * 4.9;
+            cinturaoAsteroides = Array.from({length: 220}, () => ({
+                angulo: Math.random() * Math.PI * 2,
+                distancia: raioMinCinturao + Math.random() * (raioMaxCinturao - raioMinCinturao),
+                velocidade: 0.0028 + Math.random() * 0.0015,
+                tamanho: Math.random() * 1.2 + 0.5,
+                alfa: Math.random() * 0.6 + 0.2
+            }));
+
+            const posicaoGalaxia = gerarPosicaoForaSistemaSolar(cx, cy, 55);
+            galaxiaDistante = {
+                x: posicaoGalaxia.x,
+                y: posicaoGalaxia.y,
+                anguloRotacao: Math.random() * Math.PI * 2
+            };
+
+            nebulosaFundo = {
+                x: largura * (0.18 + Math.random() * 0.64),
+                y: altura * (0.18 + Math.random() * 0.64),
+                raio: 220
+            };
+        }
+
+        function iniciarSistemaSolar() {
+            ctx.fillStyle = '#0f1117'; ctx.fillRect(0, 0, largura, altura);
+            multVelocidadeSol = 0.25;
+            
+            const estiloVisual = document.getElementById('select-estilo-planeta').value;
+            fatorZoom = (estiloVisual === '3d') ? 2.00 : 1.00;
+
+            document.getElementById('label-velocidade').innerText = '0.25x';
+            document.getElementById('label-zoom').innerText = fatorZoom.toFixed(2) + 'x';
+            
+            explosoesAtivas = [];
+            supernovas = [];
+            buracosNegros = [];
+            tempoSupernovas = 0;
+            supernovaEtapa = 0;
+            ovnis = [];
+            controleOvni.timerProx = 300;
+            controleOvni.onda = 1;
+            missilTerra.ativo = false;
+            vingancaAlien.ativa = false;
+            terraDestruida = false;
+            terraVibrando = false;
+            ovniDestruidoTotal = false;
+            alienMsg.ativa = false;
+            alienMsg.timer = 0;
+            fatalityMensagem.ativa = false;
+            fatalityMensagem.alpha = 0;
+            
+            btnDestruirOvni.style.display = 'inline-block';
+            btnDestruirOvni.classList.replace('bg-amber-600/80', 'bg-rose-600/80');
+            btnDestruirOvni.innerHTML = '🚀 Destruir OVNI';
+
+            let raioMaximoVisivel = Math.min(largura, altura) * 0.42;
+            passoRaioGlobal = raioMaximoVisivel / 8.5;
+
+            iniciarEstrelasFundo();
+
+            planetas = [
+                { nome: 'Mercúrio', distanciaBase: passoRaioGlobal * 1.0, raio: 3.5, velocidadeBase: 0.02, cor: '#a8a29e', angulo: Math.random() * Math.PI * 2 },
+                { nome: 'Vênus', distanciaBase: passoRaioGlobal * 2.0, raio: 5.5, velocidadeBase: 0.0075, cor: '#fde047', angulo: Math.random() * Math.PI * 2 },
+                { nome: 'Terra', distanciaBase: passoRaioGlobal * 3.0, raio: 6, velocidadeBase: 0.005, cor: '#38bdf8', angulo: Math.random() * Math.PI * 2, anguloLua: Math.random() * Math.PI * 2 },
+                { nome: 'Marte', distanciaBase: passoRaioGlobal * 4.0, raio: 4.5, velocidadeBase: 0.004, cor: '#f87171', angulo: Math.random() * Math.PI * 2 },
+                { nome: 'Júpiter', distanciaBase: passoRaioGlobal * 5.2, raio: 11, velocidadeBase: 0.002, cor: '#fb923c', angulo: Math.random() * Math.PI * 2 },
+                { nome: 'Saturno', distanciaBase: passoRaioGlobal * 6.4, raio: 9.5, velocidadeBase: 0.00125, cor: '#fef08a', angulo: Math.random() * Math.PI * 2, temAneis: true },
+                { nome: 'Urano', distanciaBase: passoRaioGlobal * 7.4, raio: 7, velocidadeBase: 0.00075, cor: '#67e8f9', angulo: Math.random() * Math.PI * 2 },
+                { nome: 'Netuno', distanciaBase: passoRaioGlobal * 8.4, raio: 7, velocidadeBase: 0.0005, cor: '#60a5fa', angulo: Math.random() * Math.PI * 2 }
+            ];
+
+            reiniciarCometaInterestelar();
+        }
+
+        function atualizarSistemaSolar() {
+            ctx.fillStyle = 'rgba(15, 17, 23, 0.3)'; ctx.fillRect(0, 0, largura, altura);
+            
+            mouseX += (mouseXAlvo - mouseX) * 0.05;
+            mouseY += (mouseYAlvo - mouseY) * 0.05;
+            let offsetX = (mouseX - largura / 2) * 0.015;
+            let offsetY = (mouseY - altura / 2) * 0.015;
+
+            let cx = largura / 2;
+            let cy = altura / 2;
+            let raioMaximoVisivel = Math.min(largura, altura) * 0.42;
+
+            if (supernovaEtapa < 2) {
+                tempoSupernovas++;
+                if (tempoSupernovas >= 600) {
+                    const xSupernova = Math.random() * largura;
+                    const ySupernova = Math.random() * altura;
+                    supernovas.push({ x: xSupernova, y: ySupernova, tempo: 0 });
+                    supernovaEtapa++;
+                    tempoSupernovas = 0;
+                    if (supernovaEtapa === 2) {
+                        const posicaoBuracoNegro = gerarPosicaoForaSistemaSolar(cx, cy);
+                        buracosNegros.push({
+                            x: posicaoBuracoNegro.x,
+                            y: posicaoBuracoNegro.y,
+                            raio: 11
+                        });
+                    }
+                }
+            }
+
+            const estiloVisual = document.getElementById('select-estilo-planeta').value;
+            let fatorInclinacao = (estiloVisual === '3d') ? 0.45 : 1.0;
+
+            if (tempoGlobal > 0 && tempoGlobal % 3600 === 0) {
+                estrelasFundo.forEach(e => {
+                    let direcoes = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
+                    let d = direcoes[Math.floor(Math.random() * direcoes.length)];
+                    e.baseX += d.dx; e.baseY += d.dy;
+                });
+            }
+
+            let gradNebulosa = ctx.createRadialGradient(nebulosaFundo.x + offsetX * 0.3, nebulosaFundo.y + offsetY * 0.3, 10, nebulosaFundo.x + offsetX * 0.3, nebulosaFundo.y + offsetY * 0.3, nebulosaFundo.raio);
+            gradNebulosa.addColorStop(0, 'rgba(236, 72, 153, 0.28)');
+            gradNebulosa.addColorStop(0.5, 'rgba(147, 51, 234, 0.16)');
+            gradNebulosa.addColorStop(1, 'rgba(15, 17, 23, 0)');
+            ctx.fillStyle = gradNebulosa;
+            ctx.beginPath();
+            ctx.arc(nebulosaFundo.x + offsetX * 0.3, nebulosaFundo.y + offsetY * 0.3, nebulosaFundo.raio, 0, Math.PI * 2);
+            ctx.fill();
+
+            galaxiaDistante.anguloRotacao += 0.0003;
+            ctx.save();
+            ctx.translate(galaxiaDistante.x + offsetX * 0.5, galaxiaDistante.y + offsetY * 0.5);
+            ctx.rotate(galaxiaDistante.anguloRotacao);
+            ctx.scale(1, 0.48);
+            const gradGalaxia = ctx.createRadialGradient(0, 0, 4, 0, 0, 52);
+            gradGalaxia.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradGalaxia.addColorStop(0.12, 'rgba(56, 189, 248, 0.8)');
+            gradGalaxia.addColorStop(0.48, 'rgba(168, 85, 247, 0.45)');
+            gradGalaxia.addColorStop(1, 'rgba(15, 17, 23, 0)');
+            ctx.fillStyle = gradGalaxia;
+            ctx.beginPath();
+            ctx.arc(0, 0, 52, 0, Math.PI * 2);
+            ctx.fill();
+
+            for (let braco = 0; braco < 2; braco++) {
+                ctx.beginPath();
+                for (let ponto = 0; ponto <= 80; ponto++) {
+                    const t = ponto / 80 * Math.PI * 4;
+                    const raio = t * 3.5;
+                    const angulo = t * 0.62 + braco * Math.PI;
+                    const x = Math.cos(angulo) * raio;
+                    const y = Math.sin(angulo) * raio;
+                    if (ponto === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = braco === 0 ? 'rgba(196, 181, 253, 0.85)' : 'rgba(125, 211, 252, 0.75)';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#a78bfa';
+                ctx.shadowBlur = 12;
+                ctx.stroke();
+
+                for (let ponto = 8; ponto <= 80; ponto += 8) {
+                    const t = ponto / 80 * Math.PI * 4;
+                    const raio = t * 3.5;
+                    const angulo = t * 0.62 + braco * Math.PI;
+                    ctx.fillStyle = 'rgba(224, 231, 255, 0.85)';
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angulo) * raio, Math.sin(angulo) * raio, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            estrelasFundo.forEach(e => {
+                let brilho = Math.sin(tempoGlobal * e.frequencia + e.fase);
+                let alfa = 0.3 + 0.5 * Math.abs(brilho);
+                if (e.tipoCor === 0) ctx.fillStyle = `rgba(186, 230, 253, ${alfa})`;
+                else if (e.tipoCor === 1) ctx.fillStyle = `rgba(254, 240, 138, ${alfa})`;
+                else ctx.fillStyle = `rgba(233, 213, 255, ${alfa})`;
+
+                let px = e.baseX + offsetX * 0.8;
+                let py = e.baseY + offsetY * 0.8;
+                ctx.beginPath();
+                ctx.arc(px, py, e.tamanho + (brilho > 0.5 ? 0.5 : 0), 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            poeiraCosmica.forEach(p => {
+                ctx.fillStyle = `rgba(200, 215, 235, ${p.alfa})`;
+                let px = p.baseX + offsetX * 1.2;
+                let py = p.baseY + offsetY * 1.2;
+                ctx.beginPath();
+                ctx.arc(px, py, p.tamanho, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (carroMusk.ativo) {
+                carroMusk.angulo += carroMusk.velocidade * multVelocidadeSol;
+                carroMusk.rotacaoCarro += 0.02;
+
+                let carX = cx + Math.cos(carroMusk.angulo) * (carroMusk.raioX * fatorZoom);
+                let carY = cy + Math.sin(carroMusk.angulo) * (carroMusk.raioY * fatorZoom * fatorInclinacao);
+
+                ctx.save();
+                ctx.translate(carX, carY);
+                ctx.rotate(carroMusk.rotacaoCarro);
+
+                ctx.shadowColor = '#f43f5e'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(-8, -4, 16, 8);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(-2, -3, 5, 6);
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+
+            planetas.forEach(p => {
+                let distZoom = p.distanciaBase * fatorZoom;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
+                ctx.beginPath(); 
+                ctx.ellipse(cx, cy, distZoom, distZoom * fatorInclinacao, 0, 0, Math.PI * 2); 
+                ctx.stroke();
+            });
+
+            const mostrarCinturao = document.getElementById('check-cinturao').checked;
+            if (mostrarCinturao) {
+                cinturaoAsteroides.forEach(ast => {
+                    ast.angulo += ast.velocidade * multVelocidadeSol;
+                    let distZoom = ast.distancia * fatorZoom;
+                    let ax = cx + Math.cos(ast.angulo) * distZoom;
+                    let ay = cy + Math.sin(ast.angulo) * distZoom * fatorInclinacao;
+
+                    ctx.fillStyle = `rgba(160, 175, 195, ${ast.alfa})`;
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, ast.tamanho * Math.max(0.6, fatorZoom), 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            const ovnisAtivos = () => ovnis.filter(o => o.ativo);
+
+            function criarOvni(config = {}) {
+                const daEsquerda = config.daEsquerda != null ? config.daEsquerda : Math.random() < 0.5;
+                const baseVx = Math.random() * 1.5 + 1;
+                return {
+                    ativo: true,
+                    x: daEsquerda ? -60 : largura + 60,
+                    y: config.y != null ? config.y : Math.random() * (altura * 0.6) + (altura * 0.2),
+                    vx: daEsquerda ? baseVx : -baseVx,
+                    vy: 0,
+                    estado: 'voando',
+                    timerParado: 0,
+                    escala: config.escala != null ? config.escala : 0.5
+                };
+            }
+
+            if (ovnisAtivos().length === 0 && !vingancaAlien.ativa && !terraDestruida && !ovniDestruidoTotal) {
+                controleOvni.timerProx--;
+                if (controleOvni.timerProx <= 0 && Math.random() < 0.02) {
+                    ovnis = [];
+                    if (controleOvni.onda === 2) {
+                        const yBase = Math.random() * (altura * 0.45) + (altura * 0.2);
+                        ovnis.push(criarOvni({ y: yBase, daEsquerda: true, escala: 0.32 }));
+                        ovnis.push(criarOvni({ y: Math.min(altura - 60, yBase + 90), daEsquerda: false, escala: 0.32 }));
+                    } else {
+                        ovnis.push(criarOvni({ escala: 0.5 }));
+                    }
+                    controleOvni.timerProx = 300;
+                }
+            }
+
+            ovnis.forEach((o) => {
+                if (!o.ativo) return;
+                if (o.estado === 'voando') {
+                    o.x += o.vx;
+                    let desvioY = 0;
+                    let distSol = Math.hypot(o.x - cx, o.y - cy);
+                    if (distSol < 120) desvioY = (o.y < cy) ? -1.5 : 1.5;
+                    planetas.forEach(p => {
+                        let px = cx + Math.cos(p.angulo) * (p.distanciaBase * fatorZoom);
+                        let py = cy + Math.sin(p.angulo) * (p.distanciaBase * fatorZoom) * fatorInclinacao;
+                        if (Math.hypot(o.x - px, o.y - py) < 80) desvioY = (o.y < py) ? -1.2 : 1.2;
+                    });
+                    o.y += desvioY;
+                    if (!missilTerra.ativo && Math.random() < 0.008 && o.x > largura * 0.2 && o.x < largura * 0.8) {
+                        o.estado = 'parado';
+                        o.timerParado = 140;
+                    }
+                } else if (o.estado === 'escapando') {
+                    o.x += o.vx;
+                    o.y += o.vy || 0;
+                } else if (o.estado === 'parado') {
+                    o.timerParado--;
+                    if (o.timerParado <= 0) o.estado = 'voando';
+                }
+
+                ctx.save();
+                ctx.translate(o.x, o.y);
+                ctx.scale(o.escala, o.escala);
+                ctx.fillStyle = 'rgba(203, 213, 225, 0.85)';
+                ctx.beginPath(); ctx.ellipse(0, 0, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+                ctx.beginPath(); ctx.arc(0, -3, 7, Math.PI, 0, false); ctx.fill();
+                ctx.restore();
+
+                if (o.x < -120 || o.x > largura + 120) o.ativo = false;
+            });
+            ovnis = ovnis.filter(o => o.ativo);
+
+            // --- MÍSSIL E VINGANÇA ALIENÍGENA (TIMER DE 15s) ---
+            if (missilTerra.ativo) {
+                const alvos = ovnis.filter(o => o.ativo);
+                if (alvos.length === 0) {
+                    missilTerra.ativo = false;
+                    btnDestruirOvni.classList.replace('bg-amber-600/80', 'bg-rose-600/80');
+                    btnDestruirOvni.innerHTML = '🚀 Destruir OVNI';
+                } else {
+                    let alvo = alvos[0];
+                    let menorDist = Infinity;
+                    alvos.forEach(o => {
+                        const d = Math.hypot(o.x - missilTerra.x, o.y - missilTerra.y);
+                        if (d < menorDist) { menorDist = d; alvo = o; }
+                    });
+
+                    let dx = alvo.x - missilTerra.x;
+                    let dy = alvo.y - missilTerra.y;
+                    let dist = Math.hypot(dx, dy);
+
+                    if (controleOvni.onda < 3 && dist < 55) {
+                        if (controleOvni.onda === 1) {
+                            alienMsg.ativa = true;
+                            alienMsg.texto = 'Chupa terráqueo 👽';
+                            alienMsg.timer = 240;
+                        }
+                        alvos.forEach((o, i) => {
+                            o.estado = 'escapando';
+                            o.vx = (o.vx >= 0 ? 1 : -1) * Math.max(Math.abs(o.vx) * 4.5, 8);
+                            if (controleOvni.onda === 2) {
+                                o.vx = (i === 0 ? -1 : 1) * Math.max(Math.abs(o.vx), 8);
+                                o.vy = (i === 0 ? -1.4 : 1.4);
+                            } else {
+                                o.vy = (o.y < altura / 2 ? -1 : 1) * 1.2;
+                            }
+                        });
+                        controleOvni.onda = Math.min(3, controleOvni.onda + 1);
+                        controleOvni.timerProx = 220;
+                        explosoesAtivas.push({ x: missilTerra.x, y: missilTerra.y, raioMax: 18, vida: 0.8 });
+                        missilTerra.ativo = false;
+                        btnDestruirOvni.style.display = 'inline-block';
+                        btnDestruirOvni.classList.replace('bg-amber-600/80', 'bg-rose-600/80');
+                        btnDestruirOvni.innerHTML = '🚀 Destruir OVNI';
+                    } else if (controleOvni.onda === 3 && dist < 8) {
+                        explosoesAtivas.push({ x: alvo.x, y: alvo.y, raioMax: 35, vida: 1.0 });
+                        alvo.ativo = false;
+                        ovnis = ovnis.filter(o => o.ativo);
+                        missilTerra.ativo = false;
+                        ovniDestruidoTotal = true;
+                        btnDestruirOvni.style.display = 'none';
+
+                        vingancaAlien.ativa = true;
+                        vingancaAlien.fase = 'AguardandoTempo';
+                        vingancaAlien.timerDelay = 900; // 15 segundos (15 * 60)
+                    } else {
+                        missilTerra.x += (dx / dist) * missilTerra.velocidade;
+                        missilTerra.y += (dy / dist) * missilTerra.velocidade;
+
+                        ctx.save();
+                        ctx.shadowColor = '#f43f5e'; ctx.shadowBlur = 10;
+                        ctx.fillStyle = '#fb7185';
+                        ctx.beginPath(); ctx.arc(missilTerra.x, missilTerra.y, 2.5, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+
+            let terra = planetas.find(p => p.nome === 'Terra');
+
+            if (vingancaAlien.ativa) {
+                let terraX = terra ? (cx + Math.cos(terra.angulo) * (terra.distanciaBase * fatorZoom)) : (vingancaAlien.xDestino || cx);
+                let terraY = terra ? (cy + Math.sin(terra.angulo) * (terra.distanciaBase * fatorZoom) * fatorInclinacao) : (vingancaAlien.yDestino || cy);
+
+                if (vingancaAlien.fase === 'AguardandoTempo') {
+                    vingancaAlien.timerDelay--;
+                    if (vingancaAlien.timerDelay <= 0) {
+                        vingancaAlien.fase = 'ComunicacaoAlien';
+                        vingancaAlien.x = cx - 350;
+                        vingancaAlien.y = cy - 350;
+                        alienMsg.ativa = true;
+                        vingancaAlien.timer = 180;
+                    }
+                } else if (vingancaAlien.fase === 'ComunicacaoAlien') {
+                    vingancaAlien.timer--;
+                    if (vingancaAlien.timer <= 0) {
+                        vingancaAlien.fase = 'IndoAteTerra';
+                        const anguloTerra = terra ? terra.angulo : 0;
+                        const distanciaAproximacao = passoRaioGlobal * 5.15 * fatorZoom;
+                        vingancaAlien.xDestino = cx + Math.cos(anguloTerra) * distanciaAproximacao;
+                        vingancaAlien.yDestino = cy + Math.sin(anguloTerra) * distanciaAproximacao * fatorInclinacao;
+                    }
+                } else if (vingancaAlien.fase === 'IndoAteTerra') {
+                    let dtx = vingancaAlien.xDestino - vingancaAlien.x;
+                    let dty = vingancaAlien.yDestino - vingancaAlien.y;
+                    let distT = Math.hypot(dtx, dty);
+                    const limiteInternoCinturao = passoRaioGlobal * 5.05 * fatorZoom;
+
+                    if (distT < 4) {
+                        vingancaAlien.fase = 'AguardandoDisparo';
+                        vingancaAlien.timer = 30;
+                    } else {
+                        const velocidadeNave = Math.min(3, distT);
+                        let proximoX = vingancaAlien.x + (dtx / distT) * velocidadeNave;
+                        let proximoY = vingancaAlien.y + (dty / distT) * velocidadeNave;
+                        const raioProjetado = Math.hypot(
+                            proximoX - cx,
+                            (proximoY - cy) / fatorInclinacao
+                        );
+
+                        if (raioProjetado < limiteInternoCinturao) {
+                            const angulo = Math.atan2(
+                                (proximoY - cy) / fatorInclinacao,
+                                proximoX - cx
+                            );
+                            proximoX = cx + Math.cos(angulo) * limiteInternoCinturao;
+                            proximoY = cy + Math.sin(angulo) * limiteInternoCinturao * fatorInclinacao;
+                        }
+                        vingancaAlien.x = proximoX;
+                        vingancaAlien.y = proximoY;
+                    }
+                } else if (vingancaAlien.fase === 'AguardandoDisparo') {
+                    vingancaAlien.xDestino = terraX;
+                    vingancaAlien.yDestino = terraY;
+                    terraVibrando = true;
+                    vingancaAlien.timer--;
+
+                    if (vingancaAlien.timer <= 0) {
+                        vingancaAlien.fase = 'DisparandoRaio';
+                        vingancaAlien.timer = 90; // Duração visual do feixe de laser
+                    }
+                } else if (vingancaAlien.fase === 'DisparandoRaio') {
+                    vingancaAlien.xDestino = terraX;
+                    vingancaAlien.yDestino = terraY;
+                    vingancaAlien.timer--;
+                    if (vingancaAlien.timer <= 0) {
+                        destruirTerra(vingancaAlien.xDestino, vingancaAlien.yDestino);
+                        vingancaAlien.fase = 'IndoEmbora';
+                        vingancaAlien.vx = vingancaAlien.x < cx ? -4 : 4;
+                        vingancaAlien.vy = vingancaAlien.y < cy ? -3 : 3;
+                    }
+                } else if (vingancaAlien.fase === 'IndoEmbora') {
+                    vingancaAlien.x += vingancaAlien.vx;
+                    vingancaAlien.y += vingancaAlien.vy;
+                    if (vingancaAlien.x < -300 || vingancaAlien.y < -300 || vingancaAlien.x > largura + 300) {
+                        vingancaAlien.ativa = false;
+                    }
+                }
+
+            }
+
+            // --- MENSAGEM DE COMUNICAÇÃO ALIENÍGENA NO RODAPÉ ---
+            if (alienMsg.ativa) {
+                if (alienMsg.timer > 0) {
+                    alienMsg.timer--;
+                    if (alienMsg.timer <= 0 && !vingancaAlien.ativa) {
+                        alienMsg.ativa = false;
+                    }
+                }
+                ctx.save();
+                ctx.font = 'bold 24px monospace';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(56, 189, 248, 1)';
+                ctx.fillText(alienMsg.texto, largura / 2, altura - 60);
+                ctx.restore();
+            }
+
+            // --- MENSAGEM FATALITY GRADUAL E SUBINDO ---
+            if (fatalityMensagem.ativa) {
+                if (fatalityMensagem.timer > 180) {
+                    fatalityMensagem.alpha += 0.03;
+                } else if (fatalityMensagem.timer < 60) {
+                    fatalityMensagem.alpha -= 0.03;
+                }
+                fatalityMensagem.alpha = Math.max(0, Math.min(1, fatalityMensagem.alpha));
+                fatalityMensagem.yOffset += 0.5;
+                fatalityMensagem.timer--;
+
+                if (fatalityMensagem.timer <= 0) {
+                    fatalityMensagem.ativa = false;
+                }
+
+                ctx.save();
+                ctx.font = 'bold 56px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 30;
+                ctx.fillStyle = `rgba(239, 68, 68, ${fatalityMensagem.alpha})`;
+                ctx.fillText('FATALITY!', largura / 2, (altura - 80) - fatalityMensagem.yOffset);
+                ctx.restore();
+            }
+
+            let dadosPlanetas = planetas.map(p => {
+                p.angulo += p.velocidadeBase * multVelocidadeSol;
+                let distZoom = p.distanciaBase * fatorZoom;
+                let x = cx + Math.cos(p.angulo) * distZoom;
+                let y = cy + Math.sin(p.angulo) * distZoom * fatorInclinacao;
+
+                if (p.nome === 'Terra' && terraVibrando && !terraDestruida) {
+                    x += (Math.random() * 8 - 4);
+                    y += (Math.random() * 8 - 4);
+                }
+
+                let raioPlaneta = Math.max(3, p.raio * fatorZoom);
+                return { p, x, y, raioPlaneta };
+            });
+
+            atualizarEdesenharCometas(cx, cy, fatorInclinacao, dadosPlanetas);
+
+            let planetasAtras = dadosPlanetas.filter(item => item.y < cy);
+            let planetasFrente = dadosPlanetas.filter(item => item.y >= cy);
+
+            const desenharPlaneta = (item) => {
+                let { p, x, y, raioPlaneta } = item;
+
+                if (p.temAneis) {
+                    ctx.strokeStyle = 'rgba(254, 240, 138, 0.4)';
+                    ctx.lineWidth = Math.max(1, 2.5 * fatorZoom);
+                    ctx.beginPath(); ctx.ellipse(x, y, raioPlaneta * 2.2, raioPlaneta * 0.8 * fatorInclinacao, 0, 0, Math.PI * 2); ctx.stroke();
+                }
+
+                ctx.save();
+                let anguloParaSol = Math.atan2(cy - y, cx - x);
+                let luzX = x + Math.cos(anguloParaSol) * (raioPlaneta * 0.3);
+                let luzY = y + Math.sin(anguloParaSol) * (raioPlaneta * 0.3);
+
+                let gradEsfera = ctx.createRadialGradient(luzX, luzY, raioPlaneta * 0.1, x, y, raioPlaneta);
+                gradEsfera.addColorStop(0, '#ffffff');
+                gradEsfera.addColorStop(0.4, p.cor);
+                gradEsfera.addColorStop(1, '#030712');
+
+                ctx.fillStyle = gradEsfera;
+                ctx.beginPath(); ctx.arc(x, y, raioPlaneta, 0, Math.PI * 2); ctx.fill();
+
+                ctx.clip();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+                let sHash = p.nome.length;
+                for (let k = 0; k < 5; k++) {
+                    let offsetXRel = Math.sin(p.angulo * (k + 1) + sHash) * (raioPlaneta * 0.5);
+                    let offsetYRel = Math.cos(p.angulo * (k + 1) + sHash) * (raioPlaneta * 0.5);
+                    ctx.beginPath(); ctx.arc(x + offsetXRel, y + offsetYRel, raioPlaneta * 0.35, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
+
+                if (p.nome === 'Júpiter') {
+                    ctx.fillStyle = 'rgba(185, 28, 28, 0.5)';
+                    ctx.beginPath(); ctx.ellipse(x + raioPlaneta * 0.3, y + raioPlaneta * 0.3, raioPlaneta * 0.35, raioPlaneta * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+                }
+
+                if (p.nome === 'Terra') {
+                    p.anguloLua += 0.04 * multVelocidadeSol;
+                    let luaX = x + Math.cos(p.anguloLua) * (16 * fatorZoom);
+                    let luaY = y + Math.sin(p.anguloLua) * (16 * fatorZoom * fatorInclinacao);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.beginPath(); ctx.arc(luaX, luaY, Math.max(1, 2.2 * fatorZoom), 0, Math.PI * 2); ctx.fill();
+                }
+
+                if (fatorZoom >= 0.75) {
+                    ctx.fillStyle = 'rgba(200, 210, 225, 0.6)';
+                    ctx.font = '9px system-ui';
+                    ctx.fillText(p.nome, x + raioPlaneta + 3, y + 2);
+                }
+            };
+
+            planetasAtras.forEach(desenharPlaneta);
+
+            let cicloSolar = Math.sin(tempoGlobal * 0.008);
+            let corSolBase = cicloSolar > 0 ? '#f59e0b' : '#fbbf24';
+            let raioSol = 25 * fatorZoom;
+
+            let gradSol = ctx.createRadialGradient(cx, cy, raioSol * 0.1, cx, cy, raioSol * 1.5);
+            gradSol.addColorStop(0, '#fffbeb');
+            gradSol.addColorStop(0.4, '#fef08a');
+            gradSol.addColorStop(0.8, '#f97316');
+            gradSol.addColorStop(1, 'rgba(234, 88, 12, 0)');
+            ctx.fillStyle = gradSol;
+            ctx.beginPath(); ctx.arc(cx, cy, raioSol * 1.5, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = corSolBase;
+            ctx.beginPath(); ctx.arc(cx, cy, raioSol, 0, Math.PI * 2); ctx.fill();
+
+            ctx.save();
+            for (let e = 0; e < 3; e++) {
+                let angErupcao = (tempoGlobal * 0.002) + (e * (Math.PI * 2 / 3));
+                let cicloErup = Math.sin(tempoGlobal * 0.02 + e) * 0.5 + 0.5;
+                let alturaArco = raioSol * (1.1 + cicloErup * 0.6);
+                
+                let ex1 = cx + Math.cos(angErupcao - 0.2) * raioSol;
+                let ey1 = cy + Math.sin(angErupcao - 0.2) * raioSol * fatorInclinacao;
+                let ex2 = cx + Math.cos(angErupcao + 0.2) * raioSol;
+                let ey2 = cy + Math.sin(angErupcao + 0.2) * raioSol * fatorInclinacao;
+                let topoX = cx + Math.cos(angErupcao) * alturaArco;
+                let topoY = cy + Math.sin(angErupcao) * alturaArco * fatorInclinacao;
+
+                ctx.strokeStyle = 'rgba(249, 115, 22, 0.7)';
+                ctx.lineWidth = 2.5 * fatorZoom;
+                ctx.beginPath();
+                ctx.moveTo(ex1, ey1);
+                ctx.quadraticCurveTo(topoX, topoY, ex2, ey2);
+                ctx.stroke();
+            }
+
+            ctx.beginPath(); ctx.arc(cx, cy, raioSol, 0, Math.PI * 2); ctx.clip(); 
+
+            let pulsacaoAtividade = Math.sin(tempoGlobal * 0.015) * 0.15 + 0.85;
+            for (let k = 0; k < 6; k++) {
+                let anguloPlasma = (tempoGlobal * 0.003) + (k * Math.PI / 3);
+                let pxPlasma = cx + Math.cos(anguloPlasma) * (raioSol * 0.4);
+                let pyPlasma = cy + Math.sin(anguloPlasma) * (raioSol * 0.4);
+                
+                let gradPlasma = ctx.createRadialGradient(pxPlasma, pyPlasma, 2, pxPlasma, pyPlasma, raioSol * 0.6 * pulsacaoAtividade);
+                gradPlasma.addColorStop(0, 'rgba(254, 240, 138, 0.65)');
+                gradPlasma.addColorStop(0.5, 'rgba(239, 68, 68, 0.4)');
+                gradPlasma.addColorStop(1, 'rgba(249, 115, 22, 0)');
+                
+                ctx.fillStyle = gradPlasma;
+                ctx.beginPath(); ctx.arc(pxPlasma, pyPlasma, raioSol * 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+
+            for (let f = 0; f < 8; f++) {
+                let angFlare = (tempoGlobal * 0.004) + (f * Math.PI / 4);
+                let flareX = cx + Math.cos(angFlare) * (raioSol * 0.9);
+                let flareY = cy + Math.sin(angFlare) * (raioSol * 0.9);
+                let tamanhoFlare = (Math.sin(tempoGlobal * 0.02 + f) * 0.5 + 0.5) * 4 * fatorZoom;
+
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath(); ctx.arc(flareX, flareY, Math.max(1, tamanhoFlare), 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+
+            planetasFrente.forEach(desenharPlaneta);
+
+            for (let i = supernovas.length - 1; i >= 0; i--) {
+                const supernova = supernovas[i];
+                supernova.tempo++;
+                const progresso = supernova.tempo / 120;
+                if (progresso >= 1) {
+                    supernovas.splice(i, 1);
+                    continue;
+                }
+
+                const raio = progresso * Math.max(largura, altura) * 0.45;
+                const alfa = 1 - progresso;
+                ctx.save();
+                ctx.globalAlpha = alfa;
+                ctx.shadowColor = '#fef3c7';
+                ctx.shadowBlur = 35;
+                ctx.strokeStyle = '#fff7ed';
+                ctx.lineWidth = Math.max(2, 12 * (1 - progresso));
+                ctx.beginPath();
+                ctx.arc(supernova.x, supernova.y, raio, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.strokeStyle = '#fb923c';
+                ctx.lineWidth = Math.max(1, 4 * (1 - progresso));
+                ctx.beginPath();
+                ctx.arc(supernova.x, supernova.y, raio * 0.82, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            buracosNegros.forEach(buraco => {
+                ctx.save();
+                ctx.translate(buraco.x, buraco.y);
+
+                const r = buraco.raio;
+                const brilho = 0.92 + Math.sin(tempoGlobal * 0.03) * 0.08;
+
+                // Halo externo suave
+                const halo = ctx.createRadialGradient(0, 0, r * 1.2, 0, 0, r * 4.2);
+                halo.addColorStop(0, 'rgba(251, 146, 60, 0.18)');
+                halo.addColorStop(0.45, 'rgba(245, 158, 11, 0.08)');
+                halo.addColorStop(1, 'rgba(15, 17, 23, 0)');
+                ctx.fillStyle = halo;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 4.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Arco superior (lente gravitacional - parte de trás do disco)
+                ctx.save();
+                ctx.scale(1, 0.32);
+                const arcoTopo = ctx.createLinearGradient(-r * 2.2, -r * 3.1, r * 2.2, -r * 3.1);
+                arcoTopo.addColorStop(0, 'rgba(120, 53, 15, 0)');
+                arcoTopo.addColorStop(0.18, `rgba(245, 158, 11, ${0.35 * brilho})`);
+                arcoTopo.addColorStop(0.5, `rgba(255, 237, 213, ${0.75 * brilho})`);
+                arcoTopo.addColorStop(0.82, `rgba(249, 115, 22, ${0.35 * brilho})`);
+                arcoTopo.addColorStop(1, 'rgba(120, 53, 15, 0)');
+                ctx.strokeStyle = arcoTopo;
+                ctx.lineWidth = Math.max(1.2, r * 0.55);
+                ctx.shadowColor = '#fbbf24';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(0, -r * 3.1, r * 2.15, Math.PI * 1.08, Math.PI * 1.92, false);
+                ctx.stroke();
+                ctx.restore();
+
+                // Disco de acreção principal (inclinado)
+                ctx.save();
+                ctx.rotate(-0.18);
+                ctx.scale(1, 0.22);
+                const disco = ctx.createLinearGradient(-r * 3.1, 0, r * 3.1, 0);
+                disco.addColorStop(0, 'rgba(124, 45, 18, 0.05)');
+                disco.addColorStop(0.12, `rgba(234, 88, 12, ${0.55 * brilho})`);
+                disco.addColorStop(0.28, `rgba(251, 191, 36, ${0.85 * brilho})`);
+                disco.addColorStop(0.45, `rgba(255, 251, 235, ${0.98 * brilho})`);
+                disco.addColorStop(0.62, `rgba(253, 186, 116, ${0.9 * brilho})`);
+                disco.addColorStop(0.82, `rgba(234, 88, 12, ${0.5 * brilho})`);
+                disco.addColorStop(1, 'rgba(124, 45, 18, 0.05)');
+                ctx.strokeStyle = disco;
+                ctx.lineWidth = Math.max(2.2, r * 0.95);
+                ctx.shadowColor = '#fb923c';
+                ctx.shadowBlur = 14;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 2.7, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Núcleo mais quente do disco
+                ctx.strokeStyle = `rgba(255, 247, 237, ${0.55 * brilho})`;
+                ctx.lineWidth = Math.max(0.8, r * 0.22);
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 2.7, -0.55, 0.55);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 2.7, Math.PI - 0.55, Math.PI + 0.55);
+                ctx.stroke();
+                ctx.restore();
+
+                // Arco inferior (lente gravitacional - parte da frente curvada por baixo)
+                ctx.save();
+                ctx.scale(1, 0.34);
+                const arcoBase = ctx.createLinearGradient(-r * 2.0, r * 2.85, r * 2.0, r * 2.85);
+                arcoBase.addColorStop(0, 'rgba(120, 53, 15, 0)');
+                arcoBase.addColorStop(0.2, `rgba(234, 88, 12, ${0.28 * brilho})`);
+                arcoBase.addColorStop(0.5, `rgba(253, 186, 116, ${0.55 * brilho})`);
+                arcoBase.addColorStop(0.8, `rgba(234, 88, 12, ${0.28 * brilho})`);
+                arcoBase.addColorStop(1, 'rgba(120, 53, 15, 0)');
+                ctx.strokeStyle = arcoBase;
+                ctx.lineWidth = Math.max(1, r * 0.42);
+                ctx.shadowColor = '#f97316';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(0, r * 2.85, r * 1.95, Math.PI * 0.08, Math.PI * 0.92, false);
+                ctx.stroke();
+                ctx.restore();
+
+                // Sombra do buraco negro (horizonte de eventos)
+                const sombra = ctx.createRadialGradient(-r * 0.15, -r * 0.15, r * 0.1, 0, 0, r * 1.05);
+                sombra.addColorStop(0, '#050505');
+                sombra.addColorStop(0.72, '#020617');
+                sombra.addColorStop(1, '#000000');
+                ctx.shadowColor = '#000000';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = sombra;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Anel de fótons sutil
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = `rgba(255, 244, 214, ${0.18 * brilho})`;
+                ctx.lineWidth = Math.max(0.6, r * 0.08);
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 1.02, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+
+            if (vingancaAlien.ativa &&
+                vingancaAlien.fase !== 'AguardandoTempo' &&
+                vingancaAlien.fase !== 'ComunicacaoAlien') {
+                ctx.save();
+                if (vingancaAlien.fase === 'DisparandoRaio') {
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 28;
+                    ctx.strokeStyle = '#fca5a5';
+                    ctx.lineWidth = 8;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(vingancaAlien.x, vingancaAlien.y);
+                    ctx.lineTo(vingancaAlien.xDestino, vingancaAlien.yDestino);
+                    ctx.stroke();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                ctx.translate(vingancaAlien.x, vingancaAlien.y);
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#334155';
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(25, 6);
+                ctx.lineTo(-25, 6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(-12, 3, 24, 3);
+                ctx.restore();
+            }
+
+            for (let i = explosoesAtivas.length - 1; i >= 0; i--) {
+                const exp = explosoesAtivas[i];
+                exp.vida -= 0.04;
+                if (exp.vida <= 0) {
+                    explosoesAtivas.splice(i, 1);
+                    continue;
+                }
+                const raioAtual = exp.raioMax * (1 - exp.vida * 0.3);
+                ctx.save();
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 25;
+                ctx.fillStyle = `rgba(255, 255, 255, ${exp.vida})`;
+                ctx.beginPath();
+                ctx.arc(exp.x, exp.y, raioAtual, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = `rgba(249, 115, 22, ${exp.vida * 0.8})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(exp.x, exp.y, raioAtual * 1.4, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function loop() {
+            if (!modoAtualRodando) return;
+            tempoGlobal++;
+            atualizarSistemaSolar();
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        let modoAtualRodando = true;
+        iniciarSistemaSolar();
+        loop();
+    </script>
+</body>
+</html>

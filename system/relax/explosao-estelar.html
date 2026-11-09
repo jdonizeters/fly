@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explosão Estelar Orgânica - Fly Relaxamento</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            background-color: #0f1117;
+            color: #c8d2e1;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body class="relative w-screen h-screen select-none">
+
+    <!-- HUD DE NAVEGAÇÃO / SAÍDA -->
+    <div id="hud" class="absolute top-4 left-4 z-40 flex items-center gap-3 bg-slate-900/85 backdrop-blur border border-slate-800 px-4 py-2 rounded-xl shadow-lg flex-wrap">
+        <span id="titulo-modo-atual" class="text-xs md:text-sm text-slate-300 font-semibold">Explosão Estelar Orgânica</span>
+        <span class="text-slate-600">|</span>
+        <span class="text-[11px] text-slate-400">Clique: novas cores • Mouse: origem <span id="label-matiz" class="text-sky-300 font-mono">230°</span></span>
+
+        <div id="controles-explosao" class="flex items-center gap-3 ml-1 pl-3 border-l border-slate-700 flex-wrap">
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">Velocidade:</span>
+                <button id="btn-vel-menos" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir velocidade">-</button>
+                <span id="label-vel" class="text-xs font-mono text-sky-300 w-10 text-center">1.00x</span>
+                <button id="btn-vel-mais" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar velocidade">+</button>
+            </div>
+            <span class="text-slate-700">|</span>
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">Rastro:</span>
+                <button id="btn-rastro-menos" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir rastro">-</button>
+                <span id="label-rastro" class="text-xs font-mono text-emerald-300 w-10 text-center">0.12</span>
+                <button id="btn-rastro-mais" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar rastro">+</button>
+            </div>
+            <span class="text-slate-700">|</span>
+            <button id="btn-pausar" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-2.5 py-1 rounded border border-slate-700 cursor-pointer transition" aria-label="Pausar animação">Pausar</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.createElement('canvas');
+        canvas.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        const corFundo = '#0f1117';
+
+        const prefereMovimentoReduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let largura = canvas.width = window.innerWidth;
+        let altura = canvas.height = window.innerHeight;
+
+        let mouseX = largura / 2;
+        let mouseY = altura / 2;
+        let animationFrameId = null;
+        let matizExplosao = 230;
+
+        let multVelocidade = prefereMovimentoReduzido ? 0.5 : 1.0;
+        let trailAlpha = 0.12;
+        let pausado = false;
+        let pausadoPorVisibilidade = false;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        window.addEventListener('resize', () => {
+            largura = canvas.width = window.innerWidth;
+            altura = canvas.height = window.innerHeight;
+            iniciarNovaArte();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = '../index.html';
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (e.target.closest && e.target.closest('#hud')) return;
+            matizExplosao = Math.random() * 360;
+            iniciarNovaArte();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                pausadoPorVisibilidade = true;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            } else {
+                pausadoPorVisibilidade = false;
+                if (!pausado && !animationFrameId) loop();
+            }
+        });
+
+        // --- IMPLEMENTAÇÃO: EXPLOSÃO ESTELAR ORGÂNICA ---
+        let particulasNovaArte = [];
+
+        function quantidadeParticulas() {
+            const base = Math.floor((largura * altura) / 5000);
+            const maximo = prefereMovimentoReduzido ? 180 : 420;
+            return Math.max(120, Math.min(maximo, base));
+        }
+
+        function atualizarLabelMatiz() {
+            document.getElementById('label-matiz').innerText = Math.round(matizExplosao) + '°';
+        }
+
+        function gerarCorExplosao() {
+            const variacaoMatiz = Math.random() * 60 - 30;
+            return `hsl(${(matizExplosao + variacaoMatiz + 360) % 360}, 90%, 70%)`;
+        }
+
+        function iniciarNovaArte() {
+            ctx.fillStyle = corFundo;
+            ctx.fillRect(0, 0, largura, altura);
+
+            const total = quantidadeParticulas();
+            particulasNovaArte = Array.from({ length: total }, () => ({
+                x: largura / 2,
+                y: altura / 2,
+                angulo: Math.random() * Math.PI * 2,
+                velocidade: Math.random() * 4 + 1,
+                raio: Math.random() * 2 + 0.8,
+                cor: gerarCorExplosao(),
+                vida: Math.random() * 100 + 50
+            }));
+            atualizarLabelMatiz();
+        }
+
+        function atualizarControles() {
+            document.getElementById('label-vel').innerText = multVelocidade.toFixed(2) + 'x';
+            document.getElementById('label-rastro').innerText = trailAlpha.toFixed(2);
+            const btnPausar = document.getElementById('btn-pausar');
+            btnPausar.innerText = pausado ? 'Retomar' : 'Pausar';
+            btnPausar.setAttribute('aria-label', pausado ? 'Retomar animação' : 'Pausar animação');
+        }
+
+        document.getElementById('btn-vel-mais').onclick = () => {
+            if (multVelocidade < 3.0) multVelocidade = parseFloat((multVelocidade + 0.25).toFixed(2));
+            atualizarControles();
+        };
+        document.getElementById('btn-vel-menos').onclick = () => {
+            if (multVelocidade > 0.25) multVelocidade = parseFloat((multVelocidade - 0.25).toFixed(2));
+            atualizarControles();
+        };
+        document.getElementById('btn-rastro-mais').onclick = () => {
+            if (trailAlpha < 0.30) trailAlpha = parseFloat((trailAlpha + 0.02).toFixed(2));
+            atualizarControles();
+        };
+        document.getElementById('btn-rastro-menos').onclick = () => {
+            if (trailAlpha > 0.02) trailAlpha = parseFloat((trailAlpha - 0.02).toFixed(2));
+            atualizarControles();
+        };
+        document.getElementById('btn-pausar').onclick = () => {
+            pausado = !pausado;
+            atualizarControles();
+            if (pausado) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            } else if (!pausadoPorVisibilidade) {
+                loop();
+            }
+        };
+
+        function atualizarNovaArte() {
+            ctx.fillStyle = `rgba(15, 17, 23, ${trailAlpha})`;
+            ctx.fillRect(0, 0, largura, altura);
+
+            const passo = prefereMovimentoReduzido ? Math.min(multVelocidade, 0.75) : multVelocidade;
+
+            particulasNovaArte.forEach(p => {
+                p.x += Math.cos(p.angulo) * p.velocidade * passo;
+                p.y += Math.sin(p.angulo) * p.velocidade * passo;
+                p.vida -= passo;
+
+                if (p.x < 0 || p.x > largura || p.y < 0 || p.y > altura || p.vida <= 0) {
+                    p.x = mouseX || largura / 2;
+                    p.y = mouseY || altura / 2;
+                    p.angulo = Math.random() * Math.PI * 2;
+                    p.velocidade = Math.random() * 4 + 1;
+                    p.cor = gerarCorExplosao();
+                    p.vida = Math.random() * 100 + 50;
+                }
+
+                ctx.fillStyle = p.cor;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.raio, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function loop() {
+            if (pausado || pausadoPorVisibilidade) return;
+            atualizarNovaArte();
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        atualizarControles();
+        iniciarNovaArte();
+        loop();
+    </script>
+</body>
+</html>

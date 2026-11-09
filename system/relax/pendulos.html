@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ondas de Pêndulo - Fly Relaxamento</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        body {
+            background-color: #0f1117;
+            color: #c8d2e1;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+        .hud-btn:focus-visible {
+            outline: 2px solid #38bdf8;
+            outline-offset: 2px;
+        }
+        @media (max-width: 900px) {
+            #hud {
+                max-width: calc(100vw - 2rem);
+                flex-wrap: wrap;
+            }
+            .hud-group {
+                border-left: 0;
+                padding-left: 0;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="relative w-screen h-screen select-none">
+
+    <!-- HUD DE NAVEGAÇÃO / CONTROLES -->
+    <div id="hud" class="absolute top-4 left-4 z-40 flex items-center gap-3 bg-slate-900/85 backdrop-blur border border-slate-800 px-4 py-2 rounded-xl shadow-lg">
+        <span id="titulo-modo-atual" class="text-xs md:text-sm text-slate-300 font-semibold">Ondas de Pêndulo</span>
+
+        <div id="controles-pendulo" class="hud-group flex items-center gap-3 ml-1 pl-3 border-l border-slate-700 flex-wrap">
+            <div class="flex items-center gap-1.5" role="group" aria-label="Velocidade">
+                <span class="text-xs text-slate-400">Velocidade:</span>
+                <button id="btn-vel-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir velocidade">-</button>
+                <span id="label-vel" class="text-xs font-mono text-sky-300 w-12 text-center" aria-live="polite">0.50x</span>
+                <button id="btn-vel-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar velocidade">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5" role="group" aria-label="Zoom">
+                <span class="text-xs text-slate-400">Zoom:</span>
+                <button id="btn-zoom-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir zoom">-</button>
+                <span id="label-zoom" class="text-xs font-mono text-emerald-300 w-12 text-center" aria-live="polite">1.00x</span>
+                <button id="btn-zoom-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar zoom">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5" role="group" aria-label="Rastro">
+                <span class="text-xs text-slate-400">Rastro:</span>
+                <button id="btn-rastro-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-violet-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir rastro">-</button>
+                <span id="label-rastro" class="text-xs font-mono text-violet-300 w-12 text-center" aria-live="polite">0.25</span>
+                <button id="btn-rastro-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-violet-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar rastro">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5">
+                <button id="btn-pausa" type="button" class="hud-btn px-2.5 h-7 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded text-xs cursor-pointer" aria-label="Pausar ou retomar animação" aria-pressed="false">Pausar</button>
+                <button id="btn-reset" type="button" class="hud-btn px-2.5 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs cursor-pointer" aria-label="Restaurar valores padrão">Reset</button>
+            </div>
+        </div>
+
+        <span id="hud-dica" class="text-[11px] text-slate-500 ml-1 hidden lg:inline">Clique/toque: cores • Espaço: pausa • Esc: voltar</span>
+    </div>
+
+    <script>
+        (() => {
+            const CONFIG = {
+                storageKey: 'fly-relaxamento:pendulos:v1',
+                exitHref: '../index.html',
+                background: '#0f1117',
+                pendulumCount: 15,
+                baseLength: 150,
+                lengthStep: 18,
+                baseFrequency: 0.9,
+                frequencyStep: 0.04,
+                angleAmplitude: 0.7,
+                timeScale: 0.03,
+                defaults: {
+                    speed: 0.5,
+                    zoom: 1.0,
+                    trail: 0.25,
+                    paused: false
+                },
+                limits: {
+                    speed: { min: 0.25, max: 3.0, step: 0.25 },
+                    zoom: { min: 0.2, max: 3.0, step: 0.05 },
+                    trail: { min: 0.03, max: 0.8, step: 0.02 }
+                }
+            };
+
+            const canvas = document.createElement('canvas');
+            canvas.setAttribute('aria-label', 'Animação de ondas de pêndulo');
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            const els = {
+                labelVel: document.getElementById('label-vel'),
+                labelZoom: document.getElementById('label-zoom'),
+                labelRastro: document.getElementById('label-rastro'),
+                btnVelMenos: document.getElementById('btn-vel-menos'),
+                btnVelMais: document.getElementById('btn-vel-mais'),
+                btnZoomMenos: document.getElementById('btn-zoom-menos'),
+                btnZoomMais: document.getElementById('btn-zoom-mais'),
+                btnRastroMenos: document.getElementById('btn-rastro-menos'),
+                btnRastroMais: document.getElementById('btn-rastro-mais'),
+                btnPausa: document.getElementById('btn-pausa'),
+                btnReset: document.getElementById('btn-reset'),
+                hud: document.getElementById('hud')
+            };
+
+            const reduceMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+            const state = {
+                width: 0,
+                height: 0,
+                dpr: 1,
+                time: 0,
+                speed: CONFIG.defaults.speed,
+                zoom: CONFIG.defaults.zoom,
+                trail: CONFIG.defaults.trail,
+                paused: CONFIG.defaults.paused,
+                hiddenPaused: false,
+                animationFrameId: null,
+                pendulos: []
+            };
+
+            function clamp(value, min, max) {
+                return Math.min(max, Math.max(min, value));
+            }
+
+            function roundTo(value, decimals) {
+                const factor = 10 ** decimals;
+                return Math.round(value * factor) / factor;
+            }
+
+            function formatNumber(value, decimals) {
+                return value.toFixed(decimals);
+            }
+
+            function loadPrefs() {
+                try {
+                    const raw = localStorage.getItem(CONFIG.storageKey);
+                    if (!raw) return;
+                    const prefs = JSON.parse(raw);
+                    if (typeof prefs.speed === 'number') state.speed = clamp(prefs.speed, CONFIG.limits.speed.min, CONFIG.limits.speed.max);
+                    if (typeof prefs.zoom === 'number') state.zoom = clamp(prefs.zoom, CONFIG.limits.zoom.min, CONFIG.limits.zoom.max);
+                    if (typeof prefs.trail === 'number') state.trail = clamp(prefs.trail, CONFIG.limits.trail.min, CONFIG.limits.trail.max);
+                    if (typeof prefs.paused === 'boolean') state.paused = prefs.paused;
+                } catch {
+                    // Ignora preferências inválidas.
+                }
+            }
+
+            function persist() {
+                try {
+                    localStorage.setItem(CONFIG.storageKey, JSON.stringify({
+                        speed: state.speed,
+                        zoom: state.zoom,
+                        trail: state.trail,
+                        paused: state.paused
+                    }));
+                } catch {
+                    // Ignora falhas de armazenamento (ex.: navegação privada).
+                }
+            }
+
+            function paintBackground() {
+                ctx.fillStyle = CONFIG.background;
+                ctx.fillRect(0, 0, state.width, state.height);
+            }
+
+            function setCanvasSize() {
+                state.width = window.innerWidth;
+                state.height = window.innerHeight;
+                state.dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+                canvas.width = Math.floor(state.width * state.dpr);
+                canvas.height = Math.floor(state.height * state.dpr);
+                ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+                paintBackground();
+            }
+
+            function initPendulos() {
+                state.pendulos = Array.from({ length: CONFIG.pendulumCount }, (_, i) => ({
+                    comprimento: CONFIG.baseLength + i * CONFIG.lengthStep,
+                    frequencia: CONFIG.baseFrequency + i * CONFIG.frequencyStep,
+                    cor: `hsl(${190 + i * 8}, 80%, 65%)`
+                }));
+            }
+
+            function randomizeColors() {
+                const matizBase = Math.random() * 360;
+                state.pendulos.forEach((pendulo, i) => {
+                    pendulo.cor = `hsl(${(matizBase + i * 8) % 360}, 80%, 65%)`;
+                });
+            }
+
+            function updateHud() {
+                els.labelVel.textContent = `${formatNumber(state.speed, 2)}x`;
+                els.labelZoom.textContent = `${formatNumber(state.zoom, 2)}x`;
+                els.labelRastro.textContent = formatNumber(state.trail, 2);
+                els.btnPausa.textContent = state.paused ? 'Retomar' : 'Pausar';
+                els.btnPausa.setAttribute('aria-pressed', String(state.paused));
+            }
+
+            function setSpeed(delta) {
+                state.speed = roundTo(clamp(state.speed + delta, CONFIG.limits.speed.min, CONFIG.limits.speed.max), 2);
+                updateHud();
+                persist();
+            }
+
+            function setZoom(delta) {
+                state.zoom = roundTo(clamp(state.zoom + delta, CONFIG.limits.zoom.min, CONFIG.limits.zoom.max), 2);
+                updateHud();
+                persist();
+            }
+
+            function setTrail(delta) {
+                state.trail = roundTo(clamp(state.trail + delta, CONFIG.limits.trail.min, CONFIG.limits.trail.max), 2);
+                updateHud();
+                persist();
+            }
+
+            function stopLoop() {
+                if (state.animationFrameId != null) {
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                }
+            }
+
+            function startLoop() {
+                if (state.animationFrameId == null && !state.paused && !state.hiddenPaused) {
+                    state.animationFrameId = requestAnimationFrame(loop);
+                }
+            }
+
+            function setPaused(paused) {
+                state.paused = paused;
+                updateHud();
+                persist();
+                if (state.paused) stopLoop();
+                else startLoop();
+            }
+
+            function reset() {
+                state.speed = CONFIG.defaults.speed;
+                state.zoom = CONFIG.defaults.zoom;
+                state.trail = CONFIG.defaults.trail;
+                state.paused = CONFIG.defaults.paused;
+                initPendulos();
+                paintBackground();
+                updateHud();
+                persist();
+                if (state.paused) stopLoop();
+                else startLoop();
+            }
+
+            function getLayout() {
+                const cx = state.width / 2;
+                const cy = Math.min(120, Math.max(48, state.height * 0.14));
+                const maxLength = Math.max(80, state.height - cy - 24);
+                return { cx, cy, maxLength };
+            }
+
+            function atualizarPendulos() {
+                ctx.fillStyle = `rgba(15, 17, 23, ${state.trail})`;
+                ctx.fillRect(0, 0, state.width, state.height);
+
+                const { cx, cy, maxLength } = getLayout();
+                const t = state.time * CONFIG.timeScale * state.speed;
+                const zoomScale = Math.max(0.5, state.zoom);
+
+                for (const p of state.pendulos) {
+                    const compAtual = Math.min(p.comprimento * state.zoom, maxLength);
+                    const angulo = Math.sin(t * p.frequencia) * CONFIG.angleAmplitude;
+                    const x = cx + Math.sin(angulo) * compAtual;
+                    const y = cy + Math.cos(angulo) * compAtual;
+
+                    ctx.strokeStyle = p.cor;
+                    ctx.lineWidth = 2 * zoomScale;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+
+                    ctx.fillStyle = p.cor;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6 * zoomScale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function loop() {
+                if (state.paused || state.hiddenPaused) {
+                    state.animationFrameId = null;
+                    return;
+                }
+                state.time += 1;
+                atualizarPendulos();
+                state.animationFrameId = requestAnimationFrame(loop);
+            }
+
+            function onKeyDown(event) {
+                if (event.defaultPrevented) return;
+                const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+                if (event.key === 'Escape') {
+                    window.location.href = CONFIG.exitHref;
+                    return;
+                }
+                if (event.key === ' ' || event.code === 'Space') {
+                    event.preventDefault();
+                    setPaused(!state.paused);
+                    return;
+                }
+                if (event.key === '+' || event.key === '=') {
+                    event.preventDefault();
+                    setSpeed(CONFIG.limits.speed.step);
+                    return;
+                }
+                if (event.key === '-' || event.key === '_') {
+                    event.preventDefault();
+                    setSpeed(-CONFIG.limits.speed.step);
+                    return;
+                }
+                if (event.key === ']' || event.key === 'PageUp') {
+                    event.preventDefault();
+                    setZoom(CONFIG.limits.zoom.step);
+                    return;
+                }
+                if (event.key === '[' || event.key === 'PageDown') {
+                    event.preventDefault();
+                    setZoom(-CONFIG.limits.zoom.step);
+                }
+            }
+
+            function onVisibilityChange() {
+                state.hiddenPaused = document.hidden;
+                if (state.hiddenPaused) stopLoop();
+                else startLoop();
+            }
+
+            function bindEvents() {
+                els.btnVelMais.addEventListener('click', () => setSpeed(CONFIG.limits.speed.step));
+                els.btnVelMenos.addEventListener('click', () => setSpeed(-CONFIG.limits.speed.step));
+                els.btnZoomMais.addEventListener('click', () => setZoom(CONFIG.limits.zoom.step));
+                els.btnZoomMenos.addEventListener('click', () => setZoom(-CONFIG.limits.zoom.step));
+                els.btnRastroMais.addEventListener('click', () => setTrail(CONFIG.limits.trail.step));
+                els.btnRastroMenos.addEventListener('click', () => setTrail(-CONFIG.limits.trail.step));
+                els.btnPausa.addEventListener('click', () => setPaused(!state.paused));
+                els.btnReset.addEventListener('click', reset);
+
+                canvas.addEventListener('pointerdown', (event) => {
+                    if (event.button !== 0) return;
+                    randomizeColors();
+                });
+
+                window.addEventListener('resize', setCanvasSize);
+                window.addEventListener('keydown', onKeyDown);
+                document.addEventListener('visibilitychange', onVisibilityChange);
+
+                if (reduceMotionQuery) {
+                    const onReduceMotionChange = (event) => {
+                        if (event.matches) setPaused(true);
+                    };
+                    if (typeof reduceMotionQuery.addEventListener === 'function') {
+                        reduceMotionQuery.addEventListener('change', onReduceMotionChange);
+                    } else if (typeof reduceMotionQuery.addListener === 'function') {
+                        reduceMotionQuery.addListener(onReduceMotionChange);
+                    }
+                }
+            }
+
+            function init() {
+                loadPrefs();
+                if (reduceMotionQuery && reduceMotionQuery.matches) {
+                    state.paused = true;
+                }
+                setCanvasSize();
+                initPendulos();
+                bindEvents();
+                updateHud();
+                startLoop();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>

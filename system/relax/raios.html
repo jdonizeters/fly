@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raios e Relâmpagos - Fly Relaxamento</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        body {
+            background-color: #0f1117;
+            color: #c8d2e1;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+        .hud-btn:focus-visible {
+            outline: 2px solid #38bdf8;
+            outline-offset: 2px;
+        }
+        @media (max-width: 980px) {
+            #hud {
+                max-width: calc(100vw - 2rem);
+                flex-wrap: wrap;
+            }
+            .hud-group {
+                border-left: 0;
+                padding-left: 0;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="relative w-screen h-screen select-none">
+
+    <div id="hud" class="absolute top-4 left-4 z-40 flex items-center gap-3 bg-slate-900/85 backdrop-blur border border-slate-800 px-4 py-2 rounded-xl shadow-lg">
+        <span id="titulo-modo-atual" class="text-xs md:text-sm text-slate-300 font-semibold">Raios e Relâmpagos</span>
+
+        <div id="controles-raios" class="hud-group flex items-center gap-3 ml-1 pl-3 border-l border-slate-700 flex-wrap">
+            <div class="flex items-center gap-1.5" role="group" aria-label="Velocidade">
+                <span class="text-xs text-slate-400">Velocidade:</span>
+                <button id="btn-vel-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir velocidade">-</button>
+                <span id="label-vel" class="text-xs font-mono text-sky-300 w-12 text-center" aria-live="polite">0.25x</span>
+                <button id="btn-vel-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar velocidade">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5" role="group" aria-label="Intensidade do flash">
+                <span class="text-xs text-slate-400">Flash:</span>
+                <button id="btn-flash-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir intensidade do flash">-</button>
+                <span id="label-flash" class="text-xs font-mono text-cyan-200 w-12 text-center" aria-live="polite">0.60</span>
+                <button id="btn-flash-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar intensidade do flash">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5" role="group" aria-label="Frequência de raios">
+                <span class="text-xs text-slate-400">Frequência:</span>
+                <button id="btn-freq-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir frequência de raios">-</button>
+                <span id="label-freq" class="text-xs font-mono text-indigo-200 w-12 text-center" aria-live="polite">0.035</span>
+                <button id="btn-freq-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar frequência de raios">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5" role="group" aria-label="Rastro">
+                <span class="text-xs text-slate-400">Rastro:</span>
+                <button id="btn-rastro-menos" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-violet-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Diminuir rastro">-</button>
+                <span id="label-rastro" class="text-xs font-mono text-violet-300 w-12 text-center" aria-live="polite">0.25</span>
+                <button id="btn-rastro-mais" type="button" class="hud-btn w-7 h-7 bg-slate-800 hover:bg-slate-700 text-violet-400 rounded flex items-center justify-center font-bold text-xs cursor-pointer" aria-label="Aumentar rastro">+</button>
+            </div>
+
+            <span class="text-slate-700 hidden md:inline" aria-hidden="true">|</span>
+
+            <div class="flex items-center gap-1.5">
+                <button id="btn-pausa" type="button" class="hud-btn px-2.5 h-7 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded text-xs cursor-pointer" aria-label="Pausar ou retomar animação" aria-pressed="false">Pausar</button>
+                <button id="btn-reset" type="button" class="hud-btn px-2.5 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs cursor-pointer" aria-label="Restaurar valores padrão">Reset</button>
+            </div>
+        </div>
+
+        <span id="hud-dica" class="text-[11px] text-slate-500 ml-1 hidden lg:inline">Clique/toque: raio • Espaço: pausa • Esc: voltar</span>
+    </div>
+
+    <script>
+        (() => {
+            const CONFIG = {
+                storageKey: 'fly-relaxamento:raios:v1',
+                exitHref: '../index.html',
+                background: '#0f1117',
+                maxBolts: 18,
+                rainStreaks: 6,
+                defaults: {
+                    speed: 0.25,
+                    flashIntensity: 0.6,
+                    frequency: 0.035,
+                    trail: 0.25,
+                    paused: false
+                },
+                reducedMotionDefaults: {
+                    flashIntensity: 0.15,
+                    frequency: 0.012
+                },
+                limits: {
+                    speed: { min: 0.25, max: 3.0, step: 0.25 },
+                    flashIntensity: { min: 0, max: 1.0, step: 0.05 },
+                    frequency: { min: 0, max: 0.12, step: 0.005 },
+                    trail: { min: 0.03, max: 0.8, step: 0.02 }
+                }
+            };
+
+            const canvas = document.createElement('canvas');
+            canvas.setAttribute('aria-label', 'Animação de raios e relâmpagos');
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            const els = {
+                labelVel: document.getElementById('label-vel'),
+                labelFlash: document.getElementById('label-flash'),
+                labelFreq: document.getElementById('label-freq'),
+                labelRastro: document.getElementById('label-rastro'),
+                btnVelMenos: document.getElementById('btn-vel-menos'),
+                btnVelMais: document.getElementById('btn-vel-mais'),
+                btnFlashMenos: document.getElementById('btn-flash-menos'),
+                btnFlashMais: document.getElementById('btn-flash-mais'),
+                btnFreqMenos: document.getElementById('btn-freq-menos'),
+                btnFreqMais: document.getElementById('btn-freq-mais'),
+                btnRastroMenos: document.getElementById('btn-rastro-menos'),
+                btnRastroMais: document.getElementById('btn-rastro-mais'),
+                btnPausa: document.getElementById('btn-pausa'),
+                btnReset: document.getElementById('btn-reset')
+            };
+
+            const reduceMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+            const state = {
+                width: 0,
+                height: 0,
+                dpr: 1,
+                speed: CONFIG.defaults.speed,
+                flashIntensity: CONFIG.defaults.flashIntensity,
+                frequency: CONFIG.defaults.frequency,
+                trail: CONFIG.defaults.trail,
+                paused: CONFIG.defaults.paused,
+                hiddenPaused: false,
+                animationFrameId: null,
+                raios: [],
+                flashOpacity: 0,
+                flashIntenso: false
+            };
+
+            function clamp(value, min, max) {
+                return Math.min(max, Math.max(min, value));
+            }
+
+            function roundTo(value, decimals) {
+                const factor = 10 ** decimals;
+                return Math.round(value * factor) / factor;
+            }
+
+            function format(value, decimals) {
+                return value.toFixed(decimals);
+            }
+
+            function loadPrefs() {
+                try {
+                    const raw = localStorage.getItem(CONFIG.storageKey);
+                    if (!raw) return;
+                    const prefs = JSON.parse(raw);
+                    if (typeof prefs.speed === 'number') state.speed = clamp(prefs.speed, CONFIG.limits.speed.min, CONFIG.limits.speed.max);
+                    if (typeof prefs.flashIntensity === 'number') state.flashIntensity = clamp(prefs.flashIntensity, CONFIG.limits.flashIntensity.min, CONFIG.limits.flashIntensity.max);
+                    if (typeof prefs.frequency === 'number') state.frequency = clamp(prefs.frequency, CONFIG.limits.frequency.min, CONFIG.limits.frequency.max);
+                    if (typeof prefs.trail === 'number') state.trail = clamp(prefs.trail, CONFIG.limits.trail.min, CONFIG.limits.trail.max);
+                    if (typeof prefs.paused === 'boolean') state.paused = prefs.paused;
+                } catch {
+                    // Ignora preferências inválidas.
+                }
+            }
+
+            function persist() {
+                try {
+                    localStorage.setItem(CONFIG.storageKey, JSON.stringify({
+                        speed: state.speed,
+                        flashIntensity: state.flashIntensity,
+                        frequency: state.frequency,
+                        trail: state.trail,
+                        paused: state.paused
+                    }));
+                } catch {
+                    // Ignora falhas de armazenamento.
+                }
+            }
+
+            function paintBackground() {
+                ctx.fillStyle = CONFIG.background;
+                ctx.fillRect(0, 0, state.width, state.height);
+            }
+
+            function setCanvasSize() {
+                state.width = window.innerWidth;
+                state.height = window.innerHeight;
+                state.dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+                canvas.width = Math.floor(state.width * state.dpr);
+                canvas.height = Math.floor(state.height * state.dpr);
+                ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+                paintBackground();
+            }
+
+            function updateHud() {
+                els.labelVel.textContent = `${format(state.speed, 2)}x`;
+                els.labelFlash.textContent = format(state.flashIntensity, 2);
+                els.labelFreq.textContent = format(state.frequency, 3);
+                els.labelRastro.textContent = format(state.trail, 2);
+                els.btnPausa.textContent = state.paused ? 'Retomar' : 'Pausar';
+                els.btnPausa.setAttribute('aria-pressed', String(state.paused));
+            }
+
+            function stopLoop() {
+                if (state.animationFrameId != null) {
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                }
+            }
+
+            function startLoop() {
+                if (state.animationFrameId == null && !state.paused && !state.hiddenPaused) {
+                    state.animationFrameId = requestAnimationFrame(loop);
+                }
+            }
+
+            function setPaused(paused) {
+                state.paused = paused;
+                updateHud();
+                persist();
+                if (state.paused) stopLoop();
+                else startLoop();
+            }
+
+            function setValue(key, delta, decimals) {
+                const limit = CONFIG.limits[key];
+                state[key] = roundTo(clamp(state[key] + delta, limit.min, limit.max), decimals);
+                updateHud();
+                persist();
+            }
+
+            function criarRaio(startX, intenso = false) {
+                if (state.raios.length >= CONFIG.maxBolts) {
+                    state.raios.shift();
+                }
+
+                let currentX = startX;
+                let currentY = 0;
+                const pontos = [{ x: startX, y: 0 }];
+                const maxY = Math.max(state.height, 1);
+
+                while (currentY < maxY) {
+                    currentY += Math.random() * 35 + 10;
+                    currentX += (Math.random() - 0.5) * 60;
+                    pontos.push({ x: currentX, y: currentY });
+                }
+
+                state.raios.push({
+                    pontos,
+                    vida: 1.0,
+                    cor: Math.random() > 0.3 ? '#38bdf8' : '#e0f2fe'
+                });
+
+                const flashBase = intenso ? 0.85 : 0.55;
+                state.flashOpacity = Math.max(state.flashOpacity, flashBase * state.flashIntensity);
+                state.flashIntenso = (intenso && state.flashIntensity > 0.2) || state.flashIntenso;
+            }
+
+            function reset() {
+                state.speed = CONFIG.defaults.speed;
+                state.flashIntensity = CONFIG.defaults.flashIntensity;
+                state.frequency = CONFIG.defaults.frequency;
+                state.trail = CONFIG.defaults.trail;
+                state.paused = CONFIG.defaults.paused;
+                state.raios = [];
+                state.flashOpacity = 0;
+                state.flashIntenso = false;
+                paintBackground();
+                updateHud();
+                persist();
+                if (state.paused) stopLoop();
+                else startLoop();
+            }
+
+            function atualizarRaios() {
+                if (state.flashOpacity > 0 && state.flashIntensity > 0) {
+                    ctx.fillStyle = state.flashIntenso
+                        ? `rgba(224, 242, 254, ${state.flashOpacity})`
+                        : `rgba(15, 17, 23, ${Math.min(0.9, state.trail + state.flashOpacity * 0.35)})`;
+                    state.flashOpacity -= 0.06 * state.speed;
+                    if (state.flashOpacity <= 0) {
+                        state.flashOpacity = 0;
+                        state.flashIntenso = false;
+                    }
+                } else {
+                    ctx.fillStyle = `rgba(15, 17, 23, ${state.trail})`;
+                    if (state.flashIntensity <= 0) state.flashOpacity = 0;
+                }
+                ctx.fillRect(0, 0, state.width, state.height);
+
+                if (state.frequency > 0 && Math.random() < state.frequency * state.speed) {
+                    criarRaio(Math.random() * state.width, false);
+                }
+
+                for (let i = state.raios.length - 1; i >= 0; i--) {
+                    const r = state.raios[i];
+                    r.vida -= 0.12 * state.speed;
+                    if (r.vida <= 0) {
+                        state.raios.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.strokeStyle = r.cor;
+                    ctx.lineWidth = 2.5 * r.vida;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 16 * Math.max(0.5, state.flashIntensity);
+                    ctx.beginPath();
+                    ctx.moveTo(r.pontos[0].x, r.pontos[0].y);
+                    for (let j = 1; j < r.pontos.length; j++) {
+                        ctx.lineTo(r.pontos[j].x, r.pontos[j].y);
+                    }
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+
+                ctx.strokeStyle = 'rgba(125, 211, 252, 0.18)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < CONFIG.rainStreaks; i++) {
+                    const rx = Math.random() * state.width;
+                    const ry = Math.random() * state.height;
+                    ctx.beginPath();
+                    ctx.moveTo(rx, ry);
+                    ctx.lineTo(rx - 3, ry + 20 * state.speed);
+                    ctx.stroke();
+                }
+            }
+
+            function loop() {
+                if (state.paused || state.hiddenPaused) {
+                    state.animationFrameId = null;
+                    return;
+                }
+                atualizarRaios();
+                state.animationFrameId = requestAnimationFrame(loop);
+            }
+
+            function onKeyDown(event) {
+                if (event.defaultPrevented) return;
+                const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+                if (event.key === 'Escape') {
+                    window.location.href = CONFIG.exitHref;
+                    return;
+                }
+                if (event.key === ' ' || event.code === 'Space') {
+                    event.preventDefault();
+                    setPaused(!state.paused);
+                    return;
+                }
+                if (event.key === '+' || event.key === '=') {
+                    event.preventDefault();
+                    setValue('speed', CONFIG.limits.speed.step, 2);
+                    return;
+                }
+                if (event.key === '-' || event.key === '_') {
+                    event.preventDefault();
+                    setValue('speed', -CONFIG.limits.speed.step, 2);
+                    return;
+                }
+                if (event.key === ']') {
+                    event.preventDefault();
+                    setValue('flashIntensity', CONFIG.limits.flashIntensity.step, 2);
+                    return;
+                }
+                if (event.key === '[') {
+                    event.preventDefault();
+                    setValue('flashIntensity', -CONFIG.limits.flashIntensity.step, 2);
+                }
+            }
+
+            function onVisibilityChange() {
+                state.hiddenPaused = document.hidden;
+                if (state.hiddenPaused) stopLoop();
+                else startLoop();
+            }
+
+            function applyReducedMotion(matches) {
+                if (!matches) return;
+                state.flashIntensity = Math.min(state.flashIntensity, CONFIG.reducedMotionDefaults.flashIntensity);
+                state.frequency = Math.min(state.frequency, CONFIG.reducedMotionDefaults.frequency);
+                updateHud();
+                persist();
+            }
+
+            function bindEvents() {
+                els.btnVelMais.addEventListener('click', () => setValue('speed', CONFIG.limits.speed.step, 2));
+                els.btnVelMenos.addEventListener('click', () => setValue('speed', -CONFIG.limits.speed.step, 2));
+                els.btnFlashMais.addEventListener('click', () => setValue('flashIntensity', CONFIG.limits.flashIntensity.step, 2));
+                els.btnFlashMenos.addEventListener('click', () => setValue('flashIntensity', -CONFIG.limits.flashIntensity.step, 2));
+                els.btnFreqMais.addEventListener('click', () => setValue('frequency', CONFIG.limits.frequency.step, 3));
+                els.btnFreqMenos.addEventListener('click', () => setValue('frequency', -CONFIG.limits.frequency.step, 3));
+                els.btnRastroMais.addEventListener('click', () => setValue('trail', CONFIG.limits.trail.step, 2));
+                els.btnRastroMenos.addEventListener('click', () => setValue('trail', -CONFIG.limits.trail.step, 2));
+                els.btnPausa.addEventListener('click', () => setPaused(!state.paused));
+                els.btnReset.addEventListener('click', reset);
+
+                canvas.addEventListener('pointerdown', (event) => {
+                    if (event.button !== 0) return;
+                    criarRaio(event.clientX, true);
+                });
+
+                window.addEventListener('resize', setCanvasSize);
+                window.addEventListener('keydown', onKeyDown);
+                document.addEventListener('visibilitychange', onVisibilityChange);
+
+                if (reduceMotionQuery) {
+                    const onReduceMotionChange = (event) => applyReducedMotion(event.matches);
+                    if (typeof reduceMotionQuery.addEventListener === 'function') {
+                        reduceMotionQuery.addEventListener('change', onReduceMotionChange);
+                    } else if (typeof reduceMotionQuery.addListener === 'function') {
+                        reduceMotionQuery.addListener(onReduceMotionChange);
+                    }
+                }
+            }
+
+            function init() {
+                loadPrefs();
+                applyReducedMotion(Boolean(reduceMotionQuery && reduceMotionQuery.matches));
+                setCanvasSize();
+                bindEvents();
+                updateHud();
+                startLoop();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
