@@ -1,0 +1,33 @@
+<item id="#XZ2_CHANNEL_ID" deleted="0">
+<XZ2_SEQ>#XZ2_SEQ</XZ2_SEQ>
+<XZ2_CHANEL>#XZ2_CHANEL</XZ2_CHANEL>
+#XZ2_CHANNEL_SUPER
+<XZ3DETAIL modeltype="FIELDS">
+<XZ3_CHANEL order="2">
+<value>#XZ3_CHANEL</value>
+</XZ3_CHANEL>
+<XZ3_DESC order="3">
+<value>#XZ3_DESC</value>
+</XZ3_DESC>
+<XZ3_IDOUT order="4">
+<value>#XZ3_IDOUT</value>
+</XZ3_IDOUT>
+<XZ3_OCCURS order="5">
+<value>#XZ3_OCCURS</value>
+</XZ3_OCCURS>
+</XZ3DETAIL>
+<XZ4DETAIL modeltype="GRID" optional="1">
+<struct>
+<XZ4_LAYOUT order="1"/>
+<XZ4_CHANEL order="2"/>
+<XZ4_SEQ order="3"/>
+<XZ4_FIELD order="4"/>
+<XZ4_TYPFLD order="5"/>
+<XZ4_EXEC order="6"/>
+<XZ4_COND order="7"/>
+<XZ4_NOVAL order="8"/>
+<XZ4_DESC order="9"/>
+<XZ4_OBS order="10"/>
+<XZ4_SOURCE order="11"/>
+</struct>
+<items>

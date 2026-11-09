@@ -1,0 +1,16 @@
+</items>
+</XZ4DETAIL>
+<XZ5DETAIL modeltype="GRID" optional="1">
+<struct>
+<XZ5_LAYOUT order="1"/>
+<XZ5_CHANEL order="2"/>
+<XZ5_SEQ order="3"/>
+<XZ5_FIELD order="4"/>
+<XZ5_TYPFLD order="5"/>
+<XZ5_EXEC order="6"/>
+<XZ5_COND order="7"/>
+<XZ5_OBS order="8"/>
+<XZ5_SOURCE order="9"/>
+</struct>
+</XZ5DETAIL>
+</item>
