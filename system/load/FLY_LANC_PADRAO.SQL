@@ -1,0 +1,129 @@
+-- CRIAÇÃO DA TABELA (somente se não existir)
+IF OBJECT_ID('dbo.FLY_LANC_PADRAO', 'U') IS NULL
+BEGIN
+    CREATE TABLE FLY_LANC_PADRAO (
+        COD_LP          VARCHAR(10)  NOT NULL,
+        DESC_LP         VARCHAR(255) NULL,
+        MODULO          VARCHAR(255) NULL,
+        PROCESSO        VARCHAR(255) NULL,
+        CONF_ON_LINE    VARCHAR(50)  NULL,
+        TIPO_INTEGRACAO VARCHAR(50)  NULL,
+        CONSTRAINT PK_FLY_LANC_PADRAO PRIMARY KEY (COD_LP)
+    );
+END;
+
+-- LIMPEZA E INSERÇÃO DOS DADOS
+TRUNCATE TABLE FLY_LANC_PADRAO;
+
+WITH FLY_MODULOS_PROTHEUS (CODIGO, DESCRICAO) AS (
+    SELECT * FROM (VALUES
+        ('01','ATIVO FIXO'),
+        ('02','COMPRAS'),
+        ('04','ESTOQUE E CUSTOS'),
+        ('05','FATURAMENTO'),
+        ('06','FINANCEIRO'),
+        ('07','GESTÃO DE PESSOAL'),
+        ('09','LIVROS FISCAIS'),
+        ('10','PLANEJ.CONTR.PRODUÇÃO'),
+        ('11','VEÍCULOS'),
+        ('12','OPERAÇÕES DE PDV E RETAGUARDA'),
+        ('13','TELEMARKETING, TELEVENDAS E TELECOBRANÇA'),
+        ('14','OFICINA'),
+        ('16','PONTO ELETRÔNICO'),
+        ('17','EASY IMPORT CONTROL'),
+        ('18','RH ON LINE'),
+        ('19','MANUTENÇÃO DE ATIVOS'),
+        ('20','RECRUTAMENTO E SELEÇÃO PESSOAL'),
+        ('21','INSPEÇÃO DE ENTRADAS'),
+        ('22','METROLOGIA (LABORATÓRIO)'),
+        ('23','FRONT LOJA'),
+        ('24','CONTROLE DE DOCUMENTOS'),
+        ('25','INSPEÇÃO DE PROCESSOS'),
+        ('26','TREINAMENTO'),
+        ('28','FIELD SERVICE'),
+        ('29','EASY EXPORT CONTROL'),
+        ('30','EASY FINANCING'),
+        ('31','EASY ACCOUNTING'),
+        ('33','PLANO DE SAÚDE'),
+        ('34','CONTABILIDADE'),
+        ('35','MEDICINA E SEGURANÇA DO TRABALHO'),
+        ('36','CONTROLE DE NÃO-CONFORMIDADES'),
+        ('37','CONTROLAR DE AUDITORIA'),
+        ('38','CONTROLE ESTATÍSTICO DE PROCESSOS'),
+        ('39','OMS – GESTÃO DE DISTRIBUIÇÃO'),
+        ('40','CARGOS E SALÁRIOS'),
+        ('41','AUTO PEÇAS'),
+        ('42','GESTÃO DE ARMAZÉNS'),
+        ('43','GESTÃO DE TRANSPORTES'),
+        ('44','GESTÃO DE PROJETOS'),
+        ('45','CONTROLE DE DIREITOS AUTORAIS'),
+        ('46','AUTOMAÇÃO COLETA DE DADOS'),
+        ('47','PPAP'),
+        ('50','EASY DRAWBACK CONTROL'),
+        ('51','GESTÃO HOSPITALAR'),
+        ('52','VIEWER DO QDO'),
+        ('53','AVALIAÇÃO E PESQUISA DE DESEMPENHO'),
+        ('55','SISTEMA DE FIDELIZAÇÃO E ANÁLISE DE CRÉDITO'),
+        ('56','GESTÃO AMBIENTAL'),
+        ('57','PLANEJAMENTO E CONTROLE ORÇAMENTÁRIO'),
+        ('58','GERENCIAMENTO DE PESQUISA E RESULTADO'),
+        ('67','GESTÃO AGRÍCOLA'),
+        ('69','GESTÃO DE CONTRATOS'),
+        ('70','ARQUITETURA ORGANIZACIONAL'),
+        ('72','FIELD SERVICE MANAGEMENT'),
+        ('73','CUSTOMER RELATIONSHIP MANAGEMENT'),
+        ('76','GESTÃO DE ASSUNTOS JURÍDICOS'),
+        ('77','PRÉ FATURAMENTO DE SERVIÇO'),
+        ('78','FRETE EMBARCADOR'),
+        ('79','CHÃO DE FÁBRICA'),
+        ('80','ACESSIBILIDADE VISUAL'),
+        ('81','MONITORAMENTO DE DESEMPENHO LOGÍSTICO'),
+        ('82','DESENVOLVEDOR DE PRODUTOS'),
+        ('84','TOTVS AUTOMAÇÃO FISCAL'),
+        ('85','EASY SISCOSERV'),
+        ('87','GESTÃO DE LICITAÇÕES'),
+        ('88','GESTÃO DE TRANSPORTE DE PASSAGEIRO'),
+        ('91','PROMOÇÃO DA SAÚDE'),
+        ('92','TOTVS AUTOMAÇÃO FISCAL'),
+        ('93','CENTRAL DE OBRIGAÇÕES'),
+        ('94','LOCAÇÃO DE EQUIPAMENTOS'),
+        ('95','GESTÃO DE FROTAS'),
+        ('99','CONFIGURADOR')
+    ) AS M(CODIGO, DESCRICAO)
+)
+INSERT INTO FLY_LANC_PADRAO (
+    COD_LP,
+    DESC_LP,
+    MODULO,
+    PROCESSO,
+    CONF_ON_LINE,
+    TIPO_INTEGRACAO
+)
+SELECT 
+    CVA_CODIGO   AS COD_LP,
+    CVA_DESCRI   AS DESC_LP,
+    CVA_MODULO + ' - ' + ISNULL(MOD.DESCRICAO, 'MÓDULO NÃO MAPEADO') AS MODULO,
+    CVA_PROCES + ' - ' + ISNULL(CVJ_DESCRI, '') AS PROCESSO,
+    CASE
+        WHEN CVA_CFGLAN = '1' THEN '1-Sim'
+        WHEN CVA_CFGLAN = '2' THEN '2-Nao'
+        WHEN CVA_CFGLAN = '3' THEN '3-Apenas Administrador'
+        ELSE 'ERRO'
+    END           AS CONF_ON_LINE,
+    CASE
+        WHEN CVA_TPINT = '1' THEN '1-Online'
+        WHEN CVA_TPINT = '2' THEN '2-Offline'
+        WHEN CVA_TPINT = '3' THEN '3-Ambos'
+        ELSE 'ERRO'
+    END           AS TIPO_INTEGRACAO
+FROM CVA990 CVA
+LEFT JOIN FLY_MODULOS_PROTHEUS MOD 
+       ON MOD.CODIGO = CVA_MODULO
+LEFT JOIN CVJ990 CVJ 
+       ON CVJ_MODULO = CVA_MODULO
+      AND CVJ_PROCES = CVA_PROCES
+      AND CVJ.D_E_L_E_T_ = ' '
+WHERE
+    CVA.D_E_L_E_T_ = ' '
+    AND CVA_MODULO NOT IN ('65','89')
+ORDER BY CVA_CODIGO;
