@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fly — Ferramentas Leves para Your-Day</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --sidebar-bg: #0b0e14;
+            --primary-color: #58a6ff;
+            --secondary-color: #bc8cff;
+            --accent-color: #f0883e;
+            --text-color: #c9d1d9;
+            --heading-color: #f0f6fc;
+            --code-bg: #1f242c;
+            --code-color: #79c0ff;
+            --border-color: #30363d;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            line-height: 1.6;
+            display: flex;
+        }
+
+        /* Sidebar Navigation */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            color: var(--text-color);
+            overflow-y: auto;
+            padding: 25px 15px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        #sidebar h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--primary-color);
+            letter-spacing: 0.5px;
+        }
+
+        #sidebar ul {
+            list-style: none;
+        }
+
+        #sidebar li {
+            margin-bottom: 6px;
+        }
+
+        #sidebar a {
+            color: #8b949e;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        #sidebar a:hover {
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        /* Main Content Container */
+        #content {
+            margin-left: var(--sidebar-width);
+            padding: 40px 60px;
+            width: calc(100% - var(--sidebar-width));
+            max-width: 1100px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--heading-color);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            margin-top: 40px;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--secondary-color);
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 1.05rem;
+            color: var(--heading-color);
+            margin-top: 18px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #b1bac4;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            color: #b1bac4;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        code {
+            background-color: var(--code-bg);
+            color: var(--code-color);
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.88em;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+        }
+
+        pre {
+            background-color: var(--card-bg);
+            color: var(--code-color);
+            padding: 18px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.88rem;
+            line-height: 1.45;
+            border: 1px solid var(--border-color);
+        }
+
+        blockquote {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            color: #c9d1d9;
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        blockquote.warning {
+            border-left-color: var(--accent-color);
+            background-color: rgba(240, 136, 62, 0.08);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #21262d;
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #1c2128;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: var(--border-color);
+            margin: 40px 0;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            #content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="sidebar">
+        <h2>☀️ Fly Manual</h2>
+        <ul>
+            <li><a href="#dados">Dados</a></li>
+            <li><a href="#importador">Importador de Dados</a></li>
+            <li><a href="#geradores">Geradores</a></li>
+            <li><a href="#escritorio">Escritório</a></li>
+            <li><a href="#ferramentas">Ferramentas</a></li>
+            <li><a href="#configuracoes">Configurações</a></li>
+            <li><a href="#recursos-adicionais">Recursos Adicionais</a></li>
+            <li><a href="#historia">História e Conceito</a></li>
+            <li><a href="#termos-legais">Termos Legais</a></li>
+        </ul>
+    </nav>
+
+    <main id="content">
+        <header>
+            <h1>☀️ Fly — Ferramentas Leves para Your-Day</h1>
+            <p>Bem-vindo ao <strong>Fly</strong>! Este manual foi estruturado para apresentar todas as seções e funcionalidades da ferramenta de maneira prática, direta e acessível.</p>
+            <p>O <strong>Fly</strong> foi criado por um analista de sistema de gestão ERP para outros analistas e profissionais da área. O objetivo principal é dar suporte ao dia a dia, otimizar rotinas, agilizar a aprendizagem, eliminar tarefas repetitivas ou desgastantes e liberar nosso dia para atividades mais prazerosas.</p>
+        </header>
+
+        <!-- DADOS -->
+        <section id="dados">
+            <h2>Dados</h2>
+            <p>Esta seção engloba a gestão de conexões com o banco de dados e as rotinas de navegação, consulta e análise de registros.</p>
+            
+            <blockquote class="warning">
+                <strong>⚠️ Importante:</strong> O Fly foi criado para conectar em bases locais, é para apoiar em auto-aprendizado. O autor não se responsabiliza pelo uso errado da ferramenta.
+            </blockquote>
+
+            <h3>Ferramentas da Seção Dados</h3>
+
+            <h4>1. Perfil de Conexão com Banco de Dados</h4>
+            <p>Parametrização dos perfis de acesso ao banco SQL local para habilitar as demais ferramentas da aplicação.</p>
+            <ul>
+                <li><strong>Configurações do Perfil:</strong>
+                    <ul>
+                        <li><strong>Nome do Perfil:</strong> Identificador à sua escolha.</li>
+                        <li><strong>Tipo da Origem de Dados / Servidor:</strong> Padrão <code>localhost</code>.</li>
+                        <li><strong>Banco de Dados:</strong> Seleção na lista retornada após a conexão.</li>
+                        <li><strong>Autenticação:</strong> Usuário e senha internos do banco SQL.</li>
+                        <li><strong>Driver de Conexão:</strong> Driver correspondente à sua instalação.</li>
+                        <li><strong>Planilha de Saída:</strong> Nome do arquivo para montagem e exportação de layouts/planilhas.</li>
+                    </ul>
+                </li>
+                <li><strong>Operações:</strong>
+                    <ul>
+                        <li><strong>Conectar:</strong> Duplo clique no perfil ou botão <code>Conectar</code>. Toda a ferramenta passa a responder a este banco.</li>
+                        <li><strong>Trocar Perfil:</strong> Alterne facilmente para realizar análises em ambientes diferentes.</li>
+                        <li><strong>Excluir:</strong> Selecione o perfil, clique em <code>Excluir</code> e confirme.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>2. Navegador de Banco de Dados</h4>
+            <p>Centraliza a exploração de dados, tabelas e consultas com visões customizadas para o ambiente.</p>
+            <ul>
+                <li><strong>Visões de Tabelas:</strong>
+                    <ul>
+                        <li><strong>Visão Lista:</strong> Relação completa das tabelas do banco.</li>
+                        <li><strong>Visão Treeview (2 Letras):</strong> Agrupa tabelas pelas duas primeiras letras do prefixo (ex: Família <code>SA</code>, Família <code>SC</code>).</li>
+                        <li><strong>Visão Módulos:</strong> Relaciona os campos via metadados de tabelas e colunas para agrupar por módulo do sistema.</li>
+                    </ul>
+                </li>
+                <li><strong>Visão Fly (Consultas Prontas):</strong>
+                    <ul>
+                        <li>Comandos em scripts de automação do ERP / comandos DOS.</li>
+                        <li>Exemplos de <em>queries</em> SQL e arquivos <code>.ini</code> do servidor de aplicação (útil para subir ambientes do zero).</li>
+                        <li>Relação das funções de automação mais utilizadas.</li>
+                    </ul>
+                </li>
+                <li><strong>Navegação e Ordenação:</strong>
+                    <ul>
+                        <li>Cruzamento automático com a tabela de índices para ajustar ordenação padrão do sistema de gestão ERP.</li>
+                        <li>Ordenação ascendente/descendente (A-Z / Z-A) com base no campo da chave primária do banco ou chave do dicionário.</li>
+                    </ul>
+                </li>
+                <li><strong>Performance e Filtros:</strong>
+                    <ul>
+                        <li>Exibição paginada: padrão de 500 registros (ajustável para 1.000, 5.000 ou todos).</li>
+                        <li>Botão para limpar filtros e opção (<em>checkbox</em>) para ocultar colunas inteiramente vazias.</li>
+                        <li>Exportação dos resultados para Excel.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>3. Central de Consultas SQL</h4>
+            <p>Interface focada no auxílio à escrita e execução de <em>queries</em>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Recurso</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Assistentes de Código</strong></td>
+                        <td>Botões com comandos frequentes (<code>INNER JOIN</code>, <code>LEFT JOIN</code>, etc.) que inserem a sintaxe nos locais corretos.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Repositório de Queries</strong></td>
+                        <td>Salva suas consultas customizadas no repositório local para reutilização rápida.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ajuste de Editor</strong></td>
+                        <td>Botões diretos para aumentar/diminuir o tamanho da fonte da área de edição.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>4. Antes e Depois</h4>
+            <p>Ferramenta para auditoria visual de impacto em movimentações no banco de dados.</p>
+            <ol>
+                <li><strong>Captura Inicial:</strong> Tira uma "foto" (contagem de registros) de todas as tabelas.</li>
+                <li><strong>Execução no Sistema:</strong> Realize a operação desejada no ERP (ex: inclusão de cadastro, baixa de título).</li>
+                <li><strong>Nova Contagem:</strong> O Fly processa a contagem atualizada.</li>
+                <li><strong>Comparativo:</strong> Gera uma lista com linha do tempo em abas, destacando a diferença na quantidade de registros para identificar exatamente quais tabelas sofreram alteração.</li>
+            </ol>
+
+            <h4>5. Compara Tabela de Parâmetros (Local vs. Banco de Dados)</h4>
+            <p>Compara a tabela de parâmetros do sistema do seu banco local contra um arquivo de extração local (<code>.sqlite</code>) extraído via utilitário de extração de dados.</p>
+            <ul>
+                <li>Identifica parâmetros ausentes ou com valores divergentes entre bases.</li>
+                <li>Possibilita a aplicação de filtros por parâmetro específico.</li>
+                <li>Filtro dedicado para exibir exclusivamente as diferenças.</li>
+                <li>Exportação do comparativo em planilha.</li>
+            </ul>
+
+            <h4>6. Exportar Tabelas do Banco de Dados</h4>
+            <p>Exporta tabelas da base conectada com suporte a regras de filtragem.</p>
+            <ul>
+                <li><strong>Filtro por Exclusão:</strong> Ignora tabelas que contenham determinados textos.</li>
+                <li><strong>Filtro por Inclusão:</strong> Define apenas os prefixos de tabelas desejados.</li>
+                <li><em>Nota:</em> Múltiplas regras de filtro podem ser informadas separando os termos por ponto e vírgula (<code>;</code>).</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- IMPORTADOR DE DADOS DO ERP -->
+        <section id="importador">
+            <h2>Importador de Dados do ERP</h2>
+            <p>A seção <strong>Importador de Dados do ERP</strong> reúne um ecossistema completo para apoiar a rotina de carga de dados, validação e geração de layouts para o módulo de carga massiva de dados.</p>
+
+            <pre>
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ Planilha Mestre │ ──> │  Planilha Base   │ ──> │ Validação Dados  │ ──> │ Gera Layout XML │
+│  (Fly Master)   │     │(Dicionário Campos)│     │  (Higienização)  │     │ & Arquivo Texto │
+└─────────────────┘     └──────────────────┘     └──────────────────┘     └─────────────────┘
+            </pre>
+
+            <h3>Detalhamento dos Componentes do Importador</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rotina</th>
+                        <th>Função Principal</th>
+                        <th>Destaques & Dicas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Abrir Arquivo Mestre</strong></td>
+                        <td>Gerenciar o roteiro base de importação (<code>Fly Master</code>).</td>
+                        <td>Mantém a ordem de precedência técnica de tabelas (ex: Plano de Contas antes de Produtos). Possui a aba <strong>Exceção</strong> para tratar campos fora do dicionário de colunas (como adiantamentos em contas a pagar/receber).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Gerar Planilha Base</strong></td>
+                        <td>Montar a estrutura Excel de trabalho por tabelas.</td>
+                        <td>Destaca campos obrigatórios em vermelho. Exibe anotações ao passar o mouse (tipo, tamanho, decimais e opções do campo de lista). Permite customizar cores e usar a função <strong>Formatador de Cabeçalho</strong>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Abrir Planilha Saída</strong></td>
+                        <td>Atalho rápido para a planilha de trabalho.</td>
+                        <td>Abre diretamente a planilha cadastrada no perfil sem navegar pelo gerenciador de arquivos.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Validar Dados</strong></td>
+                        <td>Higienizar dados na planilha antes da carga.</td>
+                        <td>Converte para maiúsculas, remove espaços e acentuação, e valida campos obrigatórios. Destaca células inconsistentes com cores configuráveis para uso dos filtros das ferramentas de planilhas.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Gerar Layout XML</strong></td>
+                        <td>Criar os arquivos XML de layout para o sistema de gestão ERP.</td>
+                        <td>Grava os arquivos prontos para importação no módulo configurador do sistema na pasta de <em>output</em>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. Exportar Dados da Planilha</strong></td>
+                        <td>Gerar o arquivo texto final lido pelo importador de dados.</td>
+                        <td>Aplica separadores, formatos de data, casas decimais e códigos de layout de forma automática com base no arquivo mestre.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <hr>
+
+        <!-- GERADORES -->
+        <section id="geradores">
+            <h2>Geradores</h2>
+            <p>Ferramentas para criação rápida de massas de dados fictícias para testes de homologação e desenvolvimento local.</p>
+
+            <h3>1. Gerador de Empresas</h3>
+            <p>Gera estruturas completas e fictícias de cadastro com base em inteligência de dados (municípios IBGE, telefones e CEPs coerentes por estado).</p>
+            <ul>
+                <li><strong>Tipos de cadastro:</strong>
+                    <ul>
+                        <li>Clientes (Pessoa Jurídica / Pessoa Física)</li>
+                        <li>Fornecedores (Pessoa Jurídica / Pessoa Física)</li>
+                        <li>Vendedores</li>
+                        <li>Transportadoras</li>
+                    </ul>
+                </li>
+                <li><em>Nota:</em> Para nomes de pessoas físicas, os dados gerados não incluem cálculo de CPF.</li>
+            </ul>
+
+            <h3>2. Gerador de Produtos</h3>
+            <p>Permite alimentar cadastros de estoque com até <strong>23 categorias</strong> de produtos (químicos, insumos industriais, mobília, material de consumo, etc.).</p>
+            <ul>
+                <li><strong>Geração de Códigos:</strong> Cria códigos aleatórios em Hexadecimal de 6 dígitos (ex: <code>A1F39C</code>) ou combina o tipo do produto (ex: <code>MC</code>) seguido pelo código Hexa.</li>
+                <li><strong>Compatibilidade de Tipos:</strong> Permite selecionar o tipo de produto (ex: <code>MP</code> para matéria-prima, <code>MC</code> para consumo) alinhado à categoria.</li>
+            </ul>
+
+            <h3>3. Gerador de Números</h3>
+            <p>Gera sequências numéricas ou códigos aleatórios para preenchimento de tabelas e testes em planilhas.</p>
+            <ul>
+                <li>Suporta números sequenciais, números aleatórios e códigos Hexa.</li>
+                <li>Permite definir prefixos customizados e alinhamento com zeros à esquerda.</li>
+            </ul>
+
+            <h3>4. Gerador de Cores</h3>
+            <p>Cria cores aleatórias e identifica códigos de cor para desenvolvimento de interfaces ou formatação condicional em planilhas.</p>
+            <ul>
+                <li>Retorna valores em <strong>Hexadecimal</strong> e <strong>RGB</strong>.</li>
+                <li>Inclui seletor por paleta via biblioteca integrada.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- ESCRITÓRIO -->
+        <section id="escritorio">
+            <h2>Escritório</h2>
+            <p>Utilitários de apoio geral para tarefas cotidianas de análise e documentação.</p>
+            <ul>
+                <li><strong>Calculadora RPN:</strong> Calculadora no padrão RPN (<em>Reverse Polish Notation</em>) com funções matemáticas básicas e financeiras.</li>
+                <li><strong>Calendário do Brasil:</strong> Calendário interativo com filtro por estado brasileiro para identificação de feriados estaduais e nacionais.
+                    <ul>
+                        <li>Exibe detalhes do feriado ao clicar na data.</li>
+                        <li>Calcula o intervalo entre duas datas com contagem de dias úteis, finais de semana, total de meses/anos e total de feriados no período.</li>
+                    </ul>
+                </li>
+                <li><strong>Minhas Notas:</strong> Bloco de notas estruturado para centralizar anotações rápidas organizadas por cliente e <em>tags</em>. Possui recursos de cópia, importação e exportação de credenciais ou dados operacionais.</li>
+                <li><strong>Navegador de Documentos:</strong> Explorador de arquivos com busca rápida por iniciais na pasta raiz configurada.
+                    <ul>
+                        <li>Permite expandir a árvore de diretórios, abrir documentos com o programa padrão do sistema (duplo clique) e enviar arquivos diretamente para a Lixeira.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- FERRAMENTAS -->
+        <section id="ferramentas">
+            <h2>Ferramentas</h2>
+            <p>Módulos práticos de suporte técnico, simulação e automação.</p>
+
+            <h3>1. Buscador de Arquivos</h3>
+            <p>Busca avançada no sistema de arquivos local.</p>
+            <ul>
+                <li>Permite filtrar por pasta inicial, múltiplos termos no nome do arquivo (separados por <code>;</code>) e múltiplas extensões.</li>
+                <li>Busca por conteúdo (texto interno no arquivo).</li>
+                <li>Filtro por data de modificação e dias sem acesso.</li>
+                <li>Exportação dos resultados da busca para planilha.</li>
+            </ul>
+
+            <h3>2. Higienizador de Textos</h3>
+            <p>Limpa e trata arquivos de texto brutos, removendo caracteres ocultos e tabulações indesejadas, oferecendo pré-visualização e salvamento do arquivo tratado.</p>
+
+            <h3>3. Simulador de Dialog</h3>
+            <p>Ambiente visual interativo para desenvolvimento e cálculo de coordenadas de telas do sistema de gestão ERP.</p>
+            <ul>
+                <li>Contém uma janela e um botão manipulável ("Arrasta-me").</li>
+                <li>Exibe em tempo real as coordenadas (X, Y), largura e altura da janela e dos componentes à medida que são ajustados na tela.</li>
+            </ul>
+
+            <h3>4. Quiz / Case de Negócio</h3>
+            <p>Jogo simulador de decisões empresariais focado no entendimento do fluxo de departamentos, custos e margem de lucro.</p>
+            <ul>
+                <li><strong>Objetivo:</strong> Ajustar variáveis de processos e pessoas para atingir o custo-alvo de um produto (ex: produção de pão) mantendo a margem de lucro e atratividade salarial.</li>
+                <li>Permite salvar e restaurar o progresso do jogo.</li>
+            </ul>
+
+            <h3>5. APIs Públicas</h3>
+            <p>Central de exploração de serviços Web (utilizando a suíte <code>BrasilAPI</code>) para despertar insights de automação.</p>
+            <ul>
+                <li><strong>Consultas disponíveis:</strong> CEP (com coordenadas), Estados/Cidades por DDD, CNPJ, lista de Bancos, Feriados Nacionais, Previsão do Tempo e consulta de livros via ISBN.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- CONFIGURAÇÕES -->
+        <section id="configuracoes">
+            <h2>Configurações</h2>
+            <p>Painel de controle geral para personalizar o comportamento do <strong>Fly</strong>:</p>
+            <ul>
+                <li><strong>Interface e Pastas:</strong> Definição dos diretórios padrões de leitura de documentos, gravação de <em>outputs</em> e caminho do arquivo mestre.</li>
+                <li><strong>Validações:</strong> Adição ou remoção de caracteres especiais considerados na higienização de dados.</li>
+                <li><strong>Campos Globais (Aba Geral):</strong> Cadastro de campos do ERP que devem ser tratados automaticamente como CNPJ, PIS ou receber anotações de cabeçalho na geração de layouts.</li>
+                <li><strong>Estilo & Tema:</strong> Customização da paleta de cores das validações e do ambiente.</li>
+                <li><strong>Manutenção:</strong> Botões para restauração dos padrões de fábrica.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- RECURSOS ADICIONAIS -->
+        <section id="recursos-adicionais">
+            <h2>Recursos Adicionais (Botões)</h2>
+            <ul>
+                <li><strong>Frase do Dia:</strong> Integração com a API <code>frasesestoicas.com.br</code> para apresentar reflexões e apoiar a prática de pausar durante o trabalho (Metodologia Pomodoro).</li>
+                <li><strong>Ajuda:</strong> Conecta diretamente ao manual da ferramenta no navegador.</li>
+                <li><strong>Relax:</strong> Espaço de descompressão para intervalos de solução de problemas.
+                    <ul>
+                        <li>Imagens relaxantes e integração com a API <code>wallhaven.cc</code> para trocar o papel de parede do computador com imagens aleatórias.</li>
+                        <li>Mini-game de inglês para prática leve do idioma.</li>
+                    </ul>
+                </li>
+                <li><strong>Sobre:</strong> Informações de autoria, versão, histórico de atualizações e detalhes sobre a licença de uso <strong>MIT</strong>.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- HISTÓRIA -->
+        <section id="historia">
+            <h2>A História e Conceito do Fly</h2>
+            <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                           F L Y                             │
+│  [F]erramentas  •  [L]eves para  •  [Y]our-Day (Seu Dia)    │
+└─────────────────────────────────────────────────────────────┘
+            </pre>
+            <p>O nome <strong>Fly</strong> nasceu da busca por um acrônimo curto e marcante. Combinando uma ideia original com apoio de Inteligência Artificial para brainstorming de conceitos, chegou-se ao trocadilho bilíngue: <strong>Ferramentas Leves para Your-Day</strong> (Ferramentas Leves para o seu Dia a Dia).</p>
+
+            <h3>Informações Técnicas & Aprendizados de Desenvolvimento</h3>
+            <ul>
+                <li><strong>Linguagem:</strong> Desenvolvido integralmente em <strong>Python</strong>.</li>
+                <li><strong>Filosofia de Arquitetura:</strong>
+                    <ul>
+                        <li><strong>Engenharia de Prompts e Contexto:</strong> O projeto foi desenhado com forte especialização em estrutura de prompts, modularização de código e separação rigorosa de responsabilidades (evitando arquivos monolíticos).</li>
+                        <li><strong>Foco na Solução de Problemas:</strong> Criado a partir da vivência prática de um profissional da área de ERP, transformando necessidades reais de consultoria em código funcional.</li>
+                    </ul>
+                </li>
+            </ul>
+            <blockquote>
+                "Desenvolver o Fly foi um processo de pensamento analítico, criatividade e estruturação. A ideia e a visão de como resolver cada dor do dia a dia vieram da experiência humana; a tecnologia serviu como o motor para transformar essa visão em realidade."
+            </blockquote>
+        </section>
+
+        <hr>
+
+        <!-- TERMOS LEGAIS -->
+        <section id="termos-legais">
+            <h2>Termos Legais e Isenção de Responsabilidade</h2>
+
+            <h3>1. Aviso de Propriedade Intelectual e Marcas</h3>
+            <blockquote>
+                Este projeto é uma ferramenta independente desenvolvida para fins educacionais e de produtividade pessoal. Não possui qualquer vínculo comercial, endosso, patrocínio ou associação com as empresas/marcas que as representam.
+            </blockquote>
+
+            <h3>2. Conformidade com a Proteção de Dados (LGPD)</h3>
+            <blockquote>
+                Todas as funcionalidades de geração de massas de dados (empresas, clientes, fornecedores e produtos) utilizam algoritmos matemáticos e bases públicas para criar <strong>informações 100% fictícias</strong>. A ferramenta não gera, armazena ou manipula números de CPF/CNPJ reais de pessoas físicas ou jurídicas existentes, nem realiza o envio de dados locais para servidores externos não autorizados.
+            </blockquote>
+
+            <h3>3. Termo de Isenção de Responsabilidade Técnica (<em>Disclaimer</em>) e Restrição de Ambiente</h3>
+            <blockquote>
+                O <strong>Fly</strong> foi desenhado exclusivamente para apoio ao aprendizado e uso em ambientes de desenvolvimento e homologação locais. Este aplicativo não foi feito para uso em ambiente de produção. A utilização desta ferramenta é estritamente autorizada para ambientes locais de desenvolvimento, testes e autoaprendizado. É expressamente desautorizado o seu uso direto em ambientes de produção corporativa sem as devidas validações prévias.
+                <br><br>
+                O usuário deste aplicativo assume integral e exclusiva responsabilidade por toda e qualquer operação realizada por meio da aplicação. O autor e desenvolvedor isenta-se de qualquer responsabilidade por eventuais perdas de dados, inconsistências de dicionário, paradas de sistema ou danos diretos e indiretos decorrentes do uso inadequado da ferramenta.
+            </blockquote>
+
+            <h3>4. Licenciamento do Código-Fonte</h3>
+            <blockquote>
+                Este software é distribuído sob a <strong>Licença MIT</strong>. O código-fonte é fornecido "como está" (<em>as is</em>), sem garantias explícitas ou implícitas de qualquer natureza. Para mais detalhes, consulte o arquivo <code>LICENSE</code> no repositório oficial do projeto.
+            </blockquote>
+
+            <h3>5. Conectividade e Serviços Externos</h3>
+            <blockquote>
+                O <strong>Fly</strong> não se conecta a nenhum outro tipo de serviço senão os explicitamente mencionados neste manual. Algumas funcionalidades (como a consulta a APIs públicas, busca da Frase do Dia e a atualização de Imagens/Wallpapers) dependem de conexões externas com a WEB, sendo recomendado o seu uso responsável e consciente. Além disso, para o correto funcionamento da aplicação, alguns arquivos de apoio são baixados diretamente de um repositório público, estratégia adotada para facilitar a inicialização da ferramenta pelo usuário.
+            </blockquote>
+        </section>
+
+        <footer>
+            <p>Obrigado por utilizar o <strong>Fly</strong>! Desejamos um excelente uso e muito sucesso em suas rotinas.</p>
+        </footer>
+    </main>
+
+</body>
+</html>
