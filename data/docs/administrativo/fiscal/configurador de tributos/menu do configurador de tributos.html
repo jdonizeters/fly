@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu do Configurador de Tributos</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #ffffff; /* Alterado para branco para auxiliar o daltonismo */
+            --border-color: #334155;
+            --hover-bg: #334155;
+            --code-bg: #090d16;
+            --code-color: #34d399;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alterado para iniciar no topo da tela do browser */
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            background-color: #334155;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* File Explorer Tree Styling */
+        .tree-view {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            background: var(--code-bg);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tree-view ul {
+            list-style: none;
+            padding-left: 22px;
+            margin: 0;
+            position: relative;
+        }
+
+        .tree-view > ul {
+            padding-left: 0;
+        }
+
+        .tree-view li {
+            position: relative;
+            margin: 4px 0;
+            white-space: nowrap;
+        }
+
+        /* Initially collapsed folders */
+        .tree-view li.folder > ul {
+            display: none;
+        }
+
+        .tree-view li.folder.open > ul {
+            display: block;
+        }
+
+        .folder-item {
+            color: var(--accent-color);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .folder-item::before {
+            content: '▶';
+            font-size: 0.75rem;
+            display: inline-block;
+            transition: transform 0.2s;
+            color: var(--text-muted);
+        }
+
+        .folder.open > .folder-item::before {
+            transform: rotate(90deg);
+        }
+
+        .folder-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .file-item {
+            color: var(--text-main);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: var(--hover-bg);
+            color: #ffffff;
+        }
+
+        .prw-code {
+            color: var(--code-color);
+            font-size: 0.88rem;
+            opacity: 0.9;
+        }
+
+        /* Custom Scrollbar for tree */
+        .tree-view::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .tree-view::-webkit-scrollbar-track {
+            background: var(--code-bg);
+        }
+        .tree-view::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .tree-view::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Modal Sobre */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        .modal-content p {
+            white-space: pre-line;
+            color: var(--text-muted);
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🗂️ Menu do Configurador de Tributos</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="expandAll()">Expandir Tudo</button>
+            <button class="btn" onclick="collapseAll()">Recolher Tudo</button>
+            <button class="btn" onclick="openAbout()">Sobre</button>
+        </div>
+
+        <div class="tree-view" id="treeView">
+            <ul>
+                <li class="folder">
+                    <span class="folder-item" onclick="toggleFolder(this)">📁 Regras Fiscais</span>
+                    <ul>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Cadastros</span>
+                            <ul>
+                                <li><span class="file-item">Tributo <span class="prw-code">(FISA168.PRW)</span></span></li>
+                                <li><span class="file-item">Unidade Ref. Fiscal <span class="prw-code">(FISA167.PRW)</span></span></li>
+                                <li><span class="file-item">Tabela Progressiva <span class="prw-code">(FISA160A.PRW)</span></span></li>
+                                <li><span class="file-item">Regras por NCM <span class="prw-code">(FISA160B.PRW)</span></span></li>
+                                <li><span class="file-item">Dependentes <span class="prw-code">(FISA160C.PRW)</span></span></li>
+                                <li><span class="file-item">Regras de Códigos de Prestação de Serviço <span class="prw-code">(FISA160D.PRW)</span></span></li>
+                                <li><span class="file-item">Código Situação Tributária <span class="prw-code">(FISA160I.PRW)</span></span></li>
+                                <li><span class="file-item">Guia de Escrituração <span class="prw-code">(FISA160L.PRW / FISA160M.PRW)</span></span></li>
+                                <li><span class="file-item">Código de Receita</span></li>
+                                <li><span class="file-item">Indicadores Econômicos FCA <span class="prw-code">(FISA121.PRW)</span></span></li>
+                                <li><span class="file-item">Tabela cClassTrib-IBS/CBS</span></li>
+                                <li><span class="file-item">Tabela Código Crédito Presumido IBS/CBS</span></li>
+                                <li><span class="file-item">Tabela Codigos Indicadores de Operação</span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Perfis</span>
+                            <ul>
+                                <li><span class="file-item">Perfil de Produto <span class="prw-code">(FISA166.PRW)</span></span></li>
+                                <li><span class="file-item">Perfil de Operação <span class="prw-code">(FISA165.PRW)</span></span></li>
+                                <li><span class="file-item">Perfil de Participante <span class="prw-code">(FISA164.PRW)</span></span></li>
+                                <li><span class="file-item">Perfil de Origem/Destino <span class="prw-code">(FISA163.PRW)</span></span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Regras de Calculo Documento Fiscal</span>
+                            <ul>
+                                <li><span class="file-item">Regra de Base de Cálculo <span class="prw-code">(FISA161.PRW)</span></span></li>
+                                <li><span class="file-item">Regra de Alíquota <span class="prw-code">(FISA162.PRW)</span></span></li>
+                                <li><span class="file-item">Regra de Escrituração <span class="prw-code">(FISA160J.PRW)</span></span></li>
+                                <li><span class="file-item">Regra de Cálculo - Documentos Fiscais <span class="prw-code">(FISA160.PRW)</span></span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Regra de Ajuste de Lançamento</span>
+                            <ul>
+                                <li><span class="file-item">Cadastro de Mensagem <span class="prw-code">(FISA178.PRW)</span></span></li>
+                                <li><span class="file-item">Regra de Ajuste de Lançamento <span class="prw-code">(FISA181.PRW)</span></span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Regra de IPM</span>
+                            <ul>
+                                <li><span class="file-item">Cadastro de Regra de IPM</span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Mensagens</span>
+                            <ul>
+                                <li><span class="file-item">Identificadores de Mensagens</span></li>
+                                <li><span class="file-item">Grupos de Mensagens</span></li>
+                                <li><span class="file-item">Mensagens Decodificadas</span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Apuração</span>
+                            <ul>
+                                <li><span class="file-item">Regra de Título da Apuração <span class="prw-code">(FISA176.PRW)</span></span></li>
+                                <li><span class="file-item">Regra de Apuração <span class="prw-code">(FISA169.PRW)</span></span></li>
+                                <li><span class="file-item">Apuração dos Tributos Genéricos <span class="prw-code">(FISA160K.PRW)</span></span></li>
+                                <li><span class="file-item">Apuração de IPM</span></li>
+                            </ul>
+                        </li>
+                        <li class="folder">
+                            <span class="folder-item" onclick="toggleFolder(this)">📁 Relatórios</span>
+                            <ul>
+                                <li><span class="file-item">Tributos Genéricos por Documento Fiscal</span></li>
+                                <li><span class="file-item">Conferência Escrituração</span></li>
+                                <li><span class="file-item">Relatório de Conferência Estorno ICMS</span></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li class="folder" style="margin-top: 10px;">
+                    <span class="folder-item" onclick="toggleFolder(this)">📁 Regras Financeiras</span>
+                    <ul>
+                        <li><span class="file-item">Regra de Título <span class="prw-code">(FINA024TIT.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Dedução <span class="prw-code">(FINA024DED.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Tabelas Progressivas <span class="prw-code">(FINA024TPR.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Cálculo - Títulos Financeiros <span class="prw-code">(FINA024CAL.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Vencimento <span class="prw-code">(FINA024VCT.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Retenção <span class="prw-code">(FINA024RET.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Cumulatividade <span class="prw-code">(FINA024CUM.PRW)</span></span></li>
+                        <li><span class="file-item">Regra de Valores Acessórios <span class="prw-code">(FINA024VA.PRW)</span></span></li>
+                        <li><span class="file-item">Regra Financeira <span class="prw-code">(FINA024RFI.PRW)</span></span></li>
+                    </ul>
+                </li>
+                <li class="folder" style="margin-top: 10px;">
+                    <span class="folder-item" onclick="toggleFolder(this)">📁 Regras Estoque/Custos</span>
+                    <ul>
+                        <li><span class="file-item">Regra de Custo</span></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal Sobre -->
+    <div class="modal" id="aboutModal" onclick="closeAbout(event)">
+        <div class="modal-content">
+            <h3>Sobre</h3>
+            <p>Versão 1.01 - 2026
+criado por jdrs</p>
+            <button class="btn" onclick="closeAboutModal()">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleFolder(element) {
+            const li = element.parentElement;
+            li.classList.toggle('open');
+        }
+
+        function expandAll() {
+            const folders = document.querySelectorAll('.tree-view .folder');
+            folders.forEach(f => f.classList.add('open'));
+        }
+
+        function collapseAll() {
+            const folders = document.querySelectorAll('.tree-view .folder');
+            folders.forEach(f => f.classList.remove('open'));
+        }
+
+        function openAbout() {
+            document.getElementById('aboutModal').style.display = 'flex';
+        }
+
+        function closeAboutModal() {
+            document.getElementById('aboutModal').style.display = 'none';
+        }
+
+        function closeAbout(event) {
+            if (event.target.id === 'aboutModal') {
+                closeAboutModal();
+            }
+        }
+    </script>
+
+</body>
+</html>
