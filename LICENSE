@@ -1,21 +1,28 @@
-MIT License
+Licença de Uso do Software (Código Fechado / Freeware)
+Copyright (c) [2026]
 
-Copyright (c) 2026 Donizete
+Por meio desta, é concedida permissão, gratuitamente, a qualquer pessoa física ou jurídica que obtenha uma cópia deste software (em sua forma executável e compilada), para instalar, executar e utilizar o aplicativo em ambientes pessoais ou comerciais.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. FINALIDADE E ESCOPO DE USO EXCLUSIVAMENTE LOCAL
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Objetivo: Este aplicativo foi desenvolvido estritamente para fins de aprendizado, estudo e apoio rápido a ferramentas de trabalho.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Execução Local: O software destina-se a operar exclusivamente em infraestrutura local (máquina do próprio usuário), interagindo apenas com bases de dados e arquivos locais.
+
+Restrição a Ambientes Corporativos: É expressamente vedado o uso deste software para conexão direta com bancos de dados corporativos ou de produção.
+
+Mecanismos de Bloqueio: O aplicativo contém travas e restrições internas para mitigar conexões não autorizadas a ambientes corporativos. Contudo, essas travas são fornecidas sem qualquer garantia de proteção absoluta ou infalibilidade, cabendo ao usuário a inteira responsabilidade por cumprir a regra de uso local.
+
+2. PROPRIEDADE E CÓDIGO-FONTE
+O código-fonte deste software é fechado e permanece de propriedade exclusiva do autor. Esta licença concede apenas o direito de uso do aplicativo em sua forma compilada, não conferindo acesso, direito de modificação ou permissão para engenharia reversa do código-fonte.
+
+3. AUSÊNCIA DE OBRIGAÇÕES E VÍNCULOS
+O autor não possui qualquer obrigação ou dever perante qualquer usuário, seja pessoa física ou jurídica. A disponibilização do aplicativo não cria qualquer garantia ou compromisso de suporte técnico, manutenção, atualizações, correções de falhas, continuidade do projeto ou prestação de serviços.
+
+4. REDISTRIBUIÇÃO
+O aviso de copyright e este termo de licença devem ser mantidos em todas as cópias do software distribuído. É proibida a venda ou cobrança direta pelo executável deste aplicativo por terceiros.
+
+5. ISENÇÃO TOTAL DE RESPONSABILIDADE
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA" ("AS IS"), SEM QUALQUER GARANTIA EXPLÍCITA OU IMPLÍCITA DE FUNCIONAMENTO, QUALIDADE OU ADEQUAÇÃO A QUALQUER FIM ESPECÍFICO.
+
+EM NENHUMA HIPÓTESE O AUTOR SERÁ RESPONSÁVEL POR QUALQUER RECLAMAÇÃO, PERDA DE DADOS, DANOS A BANCOS DE DADOS, PREJUÍZO COMERCIAL OU DANOS DIRETOS, INDIRETOS OU INCIDENTAIS DECORRENTES DO USO, MAU USO, VIOLAÇÃO DA REGRA DE USO LOCAL OU INCAPACIDADE DE USO DESTE SOFTWARE.
