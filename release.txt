@@ -1,0 +1,54 @@
+NOVIDADES E MELHORIAS DO PROGRAMA (15/11/2026 A 21/11/2026)
+
+1. NAVEGADOR DE BANCO DE DADOS E CONSULTAS SQL
+   - Botão "Estrutura": exibe nome, total de registros, tamanho e colunas da tabela.
+   - Campos binários (memo): mostra e exporta para Excel em texto legível.
+   - Posição da janela: salva tamanho/posição e volta ao monitor principal se sair da tela.
+   - Montagem de consultas sem digitar tudo:
+     * Insere vários campos após o SELECT já formatados e ordenados.
+     * Escolhe duas tabelas, liga campos e monta INNER JOIN e LEFT JOIN prontos.
+     * Seleciona campos para GROUP BY e ORDER BY.
+     * Facilita somas, contagens, itens únicos, cortes de texto e valores vazios.
+     * Pede confirmação ao fechar tela com alterações não salvas.
+
+2. MINHAS NOTAS
+   - Arquivar notas: marca nota como arquivada (com atualização automática do banco) e guarda o filtro "Mostrar arquivadas".
+   - Árvore recolhida ao abrir: começa fechada e expande/recolhe tudo sem perder a seleção.
+   - Tela e edição:
+     * Campos lado a lado (Categoria/Tag e Item1/Link) e histórico de categorias/tags.
+     * Botão "Salvar" fica vermelho quando há alteração.
+     * Atalhos Ctrl+Z (desfazer/refazer) e Ctrl+W (fechar).
+     * Links clicáveis, suporte a emojis no Windows e ordenação de linhas de texto.
+   - Segurança: evita abrir janela duplicada e avisa sobre alterações não salvas ao sair.
+
+3. EXPORTAÇÃO E LAYOUTS
+   - Fórmulas em planilhas: exporta o valor calculado, não o texto da fórmula.
+   - Validação: filtra abas pelo roteiro/modelo, usa cache e confere pré-requisitos como em "Gerar Layouts".
+   - Arquivo relationship.txt: liga cada arquivo exportado ao código do layout.
+   - Ajustes técnicos: melhora tratamento de caracteres especiais (separador ";"), avisos de exportação e tipos de campo em XML.
+
+4. ATALHOS, BOTÃO FLUTUANTE, ABERTURA E CONEXÕES
+   - Janela única: foca a tela já aberta em vez de abrir outra igual pelo menu.
+   - Botão flutuante: mantém a posição salva sem roubar foco indevidamente.
+   - Conexão com banco: conecta o perfil mesmo se consultas auxiliares falharem.
+
+5. KANBAN, POST-ITS E ESTABILIDADE GERAL
+   - Kanban: filtra por título/descrição com contador, move para "Concluído" em um clique e foca o campo "Título" ao abrir.
+   - Post-it: busca e filtra cards por título ou texto com contador.
+
+6. Tabalelas válidas para mile gerado em fly:
+	CAD.MUNICIPIOS
+	MOEDAS CONTÁBEIS
+	PLANO DE CONTAS
+	CENTRO DE CUSTO
+	ITEM CONTABIL
+	CLASSES DE VALORES
+	PRODUTOS
+	NATUREZAS
+	BANCOS
+	CONDIÇÃO DE PAGAMENTO
+	CLIENTES
+	FORNECEDORES
+	VENDEDORES
+	TRANSPORTADORAS
+	MOVIMENTOS INTERNOS
